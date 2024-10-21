@@ -127,6 +127,41 @@ begin
   writeln('   6. kerusakan pada kamar hotel yang dilakukan oleh pelanggan akan dikenakan denda');
   writeln('   7. ketidaksanggupan/kegagalan membayar denda akan dikenakan black-list seluruh hotel di indonesia');
 end;
+ase pilihan of
+1: begin 
+writeln ('FASILITAS KAMAR');
+writeln('1.tempat tidur berkualitas tinggi, linen premium,');
+writeln('2.kamar mandi marmer, ');
+writeln('3.TV layar datar');
+writeln('4.sound system');
+writeln('5.wifi');
+end;
+2: begin
+writeln('FASILITAS LAYANAN HOTEL');
+writeln('1.Restoran dan bar ');
+writeln('2.Layanan spa dan kesehatan');
+writeln('3.Kolam renang');
+writeln('4.Layanan kamar 24 jam');
+writeln('5.Ruang pertemuan dan fasilitas bisnis');
+writeln('6.Layanan concierge');
+writeln('7.Keamanan tingkat tinggi');
+writeln('8.Fasilitas hiburan');
+writeln('9.Fasilitas hiburan');
+end;
+3: begin
+writeln('DISEDIAKAN SESUAI REQUEST');
+writeln('1.Pengantaran makanan');
+writeln('2.Kursi Roda');
+writeln('3.perabotan tambahan');
+writeln('4.Pembersihan kamar');
+writeln('5.Laundry');
+end;
+else
+writeln('pilihan tidak valid ');
+end;
+writeln;
+writeln('JIKA INGIN MENGETAHUI LEBIH DETAIL ANDA BISA MENANYAKAN PADA RESEPSIONIS');
+end;
 
 {tambahan: }
 procedure Ulangi(var keluar: boolean;var paksakeluar: boolean;var PilihanKeluar: char);
@@ -174,6 +209,7 @@ case pilihan of
     1: DataLengkapPemesanan;
     6: HubungiAdmin;
     5: ketentuan;
+    4: fasilitas;
     end
 else writeln('Input tidak valid');
 
