@@ -452,9 +452,441 @@ end;
 {Prosedur utama: }
  // hapus kalimat ini dan masukkan prosedur datalengkappemesanan (1)
 
- // hapus kalimat ini dan masukkan prosedur cekKamar (2)
+procedure CekKamar; // memeriksa kondisi kamar
+var 
+  adaBi,kosongBi,adaDe,kosongDe,kamarInt,pilihan: integer;
+  ulang: char; 
+  a,b,pemanduSed,pemanduA,posisiSalah: integer;
+  kosong: array [1..10] of integer;
+  awalTanggalIn,akhirTanggalIn,awalTanggal,akhirTanggal,kamar,simbol: string;
+  awalTanggalLint,akhirTanggalLint,awalTanggalInLint,akhirTanggalInLint: TDateTime;
+  hari1,bulan1,tahun1,hari2,bulan2,tahun2,BacaBaris: string;
+  valid, ketemuData10: boolean;
+  Sedia,Data: text;
+label UlangInputPilihan, UlangInputTanggalSatu, UlangInputTanggalDua, SelesaiCetakTanggal, Penutup;
+begin
+valid:= true; ketemuData10:= false;
+pemanduSed:=0; pemanduA:= 0;
+adaBi:=0; kosongBi:=0; adaDe:=0; KosongDe:=0; {inisialisasi}
+assign(Data,'Data.txt');
+assign(Sedia,'Sedia.txt'); // menghubungkan variabel kepada file
+CekKetersediaan(Sedia,kosongBi,adaBi,KosongDe,adaDe,kosong); // mengecek kamar kosong dan terisi
+clrscr;
+garis('=');
+writeln('CEK KETERSEDIAAN KAMAR');
+garis('-');
+writeln;
+writeln('Kamar hari ini (Check-out jam 12:00):');
+write(  'Kamar biasa yang tersedia : ',kosongBi);gotoxy(36,wherey);
+writeln('Kamar Deluxe yang tersedia : ',kosongDe);
+write(  'Kamar biasa yang terisi   : ',adaBi);gotoxy(36,wherey);
+writeln('Kamar Deluxe yang terisi   : ',adaDe);
+writeln;
+writeln('*Note: yang akan diperiksa hanyalah penggunaan berlangsung atau mendatang!');
+garis('-');
+UlangInputPilihan:
+write('Cek kamar pada tanggal tertentu/kamar hari ini (1/2) (Keluar = 3) : ');readln(pemanduStr);
+val(pemanduStr,pilihan,posisiSalah);
+if posisiSalah > 0 then // jika pilihan bukan angka..
+  begin
+  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
+  if ulang in ['y','Y'] then
+    goto UlangInputPilihan
+  else
+    goto Penutup;
+  end;
+if (not(pilihan in [1,2])) then // jika pilihan adalah tidak atau selain pilihan
+  valid:= false; // maka invalid
+if valid then // (rekursif) jika valid.. maka langkah selanjutnya dilakukan
+  begin
+  case pilihan of // prosedur sesuai pilihan
+    1: // jika pilihan adalah memeriksa kamar pada hari tertentu..
+      begin
+      adaBi:=0; kosongBi:=0; adaDe:=0; KosongDe:=0; {inisialisasi}
+      UlangInputTanggalSatu:
+      write('Masukkan tanggal pertama {Check-in jam 13:00} : ');readln(awalTanggalIn); // input tanggal awal
+      {cek tanggal awal: }
+      konversiTanggal(awalTanggalIn,hari1,bulan1,tahun1,valid); // konversi dan cek jumlah karakter tanggal
+      if valid then // (rekursif) jika valid..
+        cekTanggal(hari1,bulan1,tahun1,valid); // cek tanggal secara mendetail
+      if not valid then // jika invalid..
+        begin 
+        cetakInvalid(0,0,3,ulang); // menanyakan jika penguna ingin mengulangi
+        if ulang in ['y','Y'] then // jika ya.. maka kembali menginput tanggal awal
+          goto UlangInputTanggalSatu
+        else
+          goto Penutup; // selain itu menuju penutup
+        end;
 
- // hapus kalimat ini dan masukkan prosedur cekpenggunahariini (2)
+      UlangInputTanggalDua:
+      write('Masukkan tanggal kedua {Check-out jam 12:00} : ');readln(akhirTanggalIn); // input tanggal akhir
+        {cek tanggal akhir: }
+      konversiTanggal(akhirTanggalIn,hari2,bulan2,tahun2,valid); // konversi dan cek jumlah karakter tanggal
+      if valid then // (rekursif) jika valid..
+        cekTanggal(hari2,bulan2,tahun2,valid); // cek tanggal secara mendetail
+      if valid then // (rekursif) jika valid..
+        cekTanggalAwalAkhir(hari1,bulan1,tahun1,hari2,bulan2,tahun2,valid, // cek tanggal awal serta tanggal akhir
+            'Tidak perlu cek kamar di masa lalu!','Tanggal awal ke akhir tidak boleh mundur atau sama!',1); // 
+      if not valid then // jika invalid..                                        // '1' artinya tanggal awal boleh ke masa lalu
+        begin 
+        cetakInvalid(0,0,4,ulang); // menanyakan jika penguna ingin mengulangi
+        if ulang in ['y','Y'] then // jika ya.. maka kembali menginput tanggal akhir
+          goto UlangInputTanggalDua
+        else if ulang in ['1'] then // jika pilihan '1'.. maka kembali ke menginput tanggal awal
+          goto UlangInputTanggalSatu
+        else
+          goto Penutup; // selain itu menuju penutup
+        end;
+      awalTanggalIn:= hari1 +'/'+ bulan1 +'/'+ tahun1;
+      akhirTanggalIn:= hari2 +'/'+ bulan2 +'/'+ tahun2; // memasukan keuda inputan tanggal ke variabel yang sebernarnya
+      awalTanggalInLint:= StrToDate(awalTanggalIn,'dd/mm/yyyy','/');
+      akhirTanggalInLint:= StrToDate(akhirTanggalIn,'dd/mm/yyyy','/'); // menkonversi kedua tanggal ke 'date angka'
+      reset(Data); // membuka data untuk dibaca
+      while not eof(Data) do // selama file belum berakhir..
+        begin
+        readln(Data, simbol); // mencari simbol '$'
+        if pos('$',simbol) > 0 then // jika simbol ditemukan.. artinya ada data untuk dibaca
+          begin
+          for a:=1 to 6 do // melompati baris 1 sampai 6 dari data
+            readln(Data);
+          readln(Data,BacaBaris); // membaca baris ketujuh dan menyalinnya
+          for a:=8 to 9 do // melompati sisa baris
+            readln(Data);
+          awalTanggal:= copy(BacaBaris,37,10); // mengambil data pemesanan tanggal awal
+          akhirTanggal:= copy(BacaBaris,55,10); // mengambil data pemesanan tanggal akhir
+          awalTanggalLint:= StrToDate(awalTanggal,'dd/mm/yyyy','/');
+          akhirTanggalLint:= StrToDate(akhirTanggal,'dd/mm/yyyy','/'); // menkonversi kedua tanggal ke 'date angka'
+          if ((awalTanggalLint <= awalTanggalInLint) and (akhirTanggalLint > awalTanggalInLint)) OR
+            ((awalTanggalLint < akhirTanggalInLint ) and (akhirTanggalLint >= akhirTanggalInLint)) OR
+            ((awalTanggalLint >= awalTanggalInLint) and (akhirTanggalLint <= akhirTanggalInLint)) then
+              begin                                   //+jika tanggal awal data < atau = input tanggal awal DAN tanggal akhir data > input tanggal awal..
+              ketemuData10:= false; // pemandu baris  //+atau jika tanggal awal data < input tanggal akhir DAN tanggal akhir data > atau = input tanggal akhir..
+              pemanduA:= pemanduA + 1;//jumlah data.. //+atau jika tanggal awal data > atau = input tanggal awal DAN tanggal akhir data < atau = input tanggal akhir..
+              if pemanduA = 1 then //yang memenuhi    //+maka dihitung
+                begin
+                write('DAFTAR PESANAN TANGGAL ('); 
+                Textcolor(red);
+                write(awalTanggalIn); // jika ada data yang memenuhi kriteria, maka pesan ini dicetak
+                Textcolor(white);
+                write(') - (');
+                Textcolor(red);
+                write(akhirTanggalIn);
+                Textcolor(white);
+                writeln(')');
+                writeln;
+                end;
+              write(pemanduA,'. ('); // perintah selanjutnya memberitahu tanggal mana yang bersinggungan dengan tanggal inputan dengan warna kuning
+              if ((awalTanggalLint >= awalTanggalInLint) and // jika awal tanggal dan akhir tanggal data bersinggungan..
+                  (akhirTanggalLint <= akhirTanggalInLint)) then
+                  begin
+                  Textcolor(yellow); // awal tanggal dan akhir tanggal data berwarna kuning
+                  write(awalTanggal);
+                  Textcolor(white);
+                  write(') Sampai (');
+                  Textcolor(yellow);
+                  write(akhirTanggal);
+                  Textcolor(white);
+                  goto SelesaiCetakTanggal; // melompat ke label SelesaiCetakTanggal
+                  end;
+              if ((awalTanggalLint <= awalTanggalInLint) and // jika awal tanggal data tidak bersinggungan dan akhir tanggal data bersinggungan..
+                  (akhirTanggalLint > awalTanggalInLint)) then 
+                  begin
+                  Textcolor(green); // awal tanggal data berwarna hijau
+                  write(awalTanggal);
+                  Textcolor(white);
+                  write(') Sampai (');
+                  Textcolor(yellow); // akhir tanggal data berwarna kuning
+                  write(akhirTanggal);
+                  Textcolor(white);
+                  goto SelesaiCetakTanggal; // melompat ke label SelesaiCetakTanggal
+                  end;
+              if ((awalTanggalLint < akhirTanggalInLint ) and 
+                  (akhirTanggalLint >= akhirTanggalInLint)) then // jika awal tanggal data bersinggungan dan akhir tanggal data tidak bersinggungan..
+                  begin
+                  Textcolor(yellow); // awal tanggal data berwarna kuning
+                  write(awalTanggal);
+                  Textcolor(white);
+                  write(') Sampai (');
+                  Textcolor(green); // akhir tanggal data berwarna hijau
+                  write(akhirTanggal);
+                  Textcolor(white);
+                  end;
+              SelesaiCetakTanggal:
+              write(') kamar: '); //--mencetak jenis kamar
+              kamar:=copy(BacaBaris,33,2); // menyalin jenis kamar jika berdasarkan keterangan
+              val(kamar,kamarInt,posisiSalah);
+              if kamar = 'De' then
+                begin
+                writeln('Deluxe'); // jika Deluxe maka dicetak
+                adaDe:= adaDe + 1; // Deluxe dihitung
+                end;
+              if kamar = 'Bi' then
+                begin
+                writeln('Biasa'); // jika Biasa maka dicetak
+                adaBi:= adaBi + 1; // Biasa dihitung
+                end;
+              if posisiSalah = 0 then // jika berdasarkan nomor kamar..
+                begin
+                if kamarInt > 5 then
+                  begin
+                  writeln('Deluxe'); // jika Deluxe maka dicetak
+                  adaDe:= adaDe + 1; // Deluxe dihitung
+                  end
+                else
+                  begin
+                  writeln('Biasa'); // jika Biasa maka dicetak
+                  adaBi:= adaBi + 1; //--Biasa dihitung
+                  end;
+                end;
+              if (pemanduA mod 10 = 0) AND not ketemuData10 then // jika data yang ditampilkan merupakan kelipatan dari..
+                begin                                            // ..sepuluh, maka program berhenti menampilkan dan menunggu..
+                ketemuData10:= true; // mencegah error..         // ..perintah ENTER dari pengguna untuk melanjutkan
+                readln;              // ..tampilan data ngestuk atau tertahan
+                end
+              else
+                writeln;
+              end;
+          end;
+        end;
+      close(Data); // menutup file
+      kosongDe:= 5 - adaDe; //--menghitung jumlah kamar kosong
+      if adaBi > 4 then // jika kamar Biasa penuh..
+        kosongBi:= 0 // kosong Biasa = o
+      else // selain itu..
+        kosongBi:= 5 - adaBi; // hitung jumlah kamar kosong Biasa
+      if adaDe > 4 then // jika kamar Deluxe penuh..
+        kosongDe:= 0 // kosong Deluxe = 0
+      else // selain itu..
+        kosongDe:= 5 - adaDe; //--hitung jumlah kamar kosong Deluxe
+      if (kosongBi = 0) AND (kosongDe = 0) then // jika seluruh kamar penuh..
+        writeln('Total : Tidak ada kamar kosong!');
+      if (kosongBi > 0) OR (kosongDe > 0) then // jika ada kamar yang kosong..
+        begin
+        if (kosongBi = 5) AND (kosongDe = 5) then // (jika tidak ada tanggal yang bersinggungan.. daftar tidak akan dicetak)
+          writeln;
+        write('Total :');
+        gotoxy(9,wherey);writeln('Kamar kosong (Deluxe) : ',kosongDe); // ke baris tempat krusor berada, ke lokasi x = 9 lalu cetak
+        gotoxy(9,wherey);writeln('Kamar kosong (Biasa) : ',kosongBi); // ke baris tempat krusor berada, ke lokasi x = 9 lalu cetak
+        end;
+      end;
+    2: // jika pilihan = memeriksa kamar hari ini..
+      begin
+      reset(Sedia); // membuka data untuk dibaca
+      for a:=1 to 10 do // dari kamar pertama sampai kesepuluh..
+        begin
+        readln(Sedia,BacaBaris); // baca atau cari simbol
+        if (pos('$',BacaBaris) > 0) or (pos('&',BacaBaris) > 0) then
+          begin // jika simbol kamar adalah kosong..
+          pemanduSed:= pemanduSed + 1; // pemandu nomor kamar (pencacah a rentan error)
+          write('Kamar ke-',pemanduSed,' : '); // cetak nomor kamar
+          Textcolor(green);
+          writeln('Kosong');
+          Textcolor(white);
+          readln(Sedia); // skip baris kosong (jarak antar data)
+          end;
+        if (pos('*',BacaBaris) > 0) or (pos('#',BacaBaris) > 0) then
+          begin // jika simbol kamar adalah terisi..
+          pemanduSed:= pemanduSed + 1; // pemandu kamar + 1
+          write('Kamar ke-',pemanduSed,' : '); // cetak nomor kamar
+          Textcolor(red);
+          writeln('Terisi');
+          Textcolor(white);
+          for b:=1 to 9 do // baca dan cetak seluruh baris data
+            begin
+            readln(Sedia,BacaBaris);
+            writeln(BacaBaris);
+            end;
+          readln(Sedia); // skip baris kosong (jarak antar data)
+          end;
+        if (pemanduSed mod 2 = 0) AND (not((pemanduSed = 10) or (pemanduSed = 0))) then
+          readln // jika nomor kamar yang ditampilkan kelipatan 2, maka tunggu perintah pengguna
+        else if (pemanduSed mod 2 > 0) then // selain itu beri jarak
+          writeln;
+        end;
+      close(Sedia); // tutup file
+      end;
+    end; //endcaseof
+  end; //endvalid
+Penutup:
+end; // end prosedur
+
+
+procedure CekPenggunaHariIni; // memeriksa yang check-in atau check-out hari ini
+var
+  Data: text;
+  BacaBaris: array [1..10] of string;
+  AwalTanggal,AkhirTanggal,pemanduStr,simbol: string;
+  lagi: char;
+  ketemuData4: boolean;
+  a,ketemuData,pilihan,hasil: integer;
+  awalTanggalLint,akhirTanggalLint,sekarangTanggalLint,waktuAwalLint,waktuAkhirLint,waktuSekarangLint: TDateTime;
+label UlangInputPilihan, Penutup;
+begin
+ketemuData:=0; ketemuData4:= false;
+sekarangTanggalLint:= StrToDate(DateToStr(WaktuSekarang)); 
+waktuAwalLint:= StrToTime('13:00:00',':');
+waktuAkhirLint:= StrToTime('12:00:00',':'); {inisialisasi}
+assign(Data, 'Data.txt'); // menghubungkan variabel kepada file
+
+clrscr;
+garis('=');
+writeln('PENGGUNA KAMAR BELUM CHECK-IN/OUT HARI INI');
+writeln;
+writeln('Note: Refresh setelah 23:59');
+garis('-');
+UlangInputPilihan:
+write('Tampilkan data check-in/check-out (1/2) : ');readln(pemanduStr); // input pilihan admin
+val(pemanduStr,pilihan,posisiSalah); // coba konversi ke angka
+if posisiSalah > 0 then // jika gagal konversi..
+  begin
+  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. kembali menginput pilihan
+    goto UlangInputPilihan
+  else
+    goto Penutup; // selain itu.. menuju penutup
+  end;
+if (pilihan > 2) OR (pilihan < 1) then // jika angka diluar pilihan..
+  begin
+  cetakInvalid(1,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. kembali menginput pilihan
+    goto UlangInputPilihan
+  else
+    goto Penutup; // selain itu.. menuju penutup
+  end;
+writeln; // beri jarak
+reset(Data); // buka data untuk dibaca
+while not eof(Data) do // selama data belum berakhir..
+  begin
+  readln(Data,simbol); // cari simbol '$'
+  if pos('$',simbol) > 0 then // jika ditemukan..
+    begin
+    hasil:=0; {inisialisasi}
+    for a:=1 to 9 do // baca keseluruhan data
+      readln(Data,BacaBaris[a]);
+    awalTanggal:= copy(BacaBaris[7],37,10); // salin awal tanggal
+    akhirTanggal:= copy(BacaBaris[7],55,10); // salin akhir tanggal
+    awalTanggalLint:= StrToDate(awalTanggal,'dd/mm/yyyy','/');
+    akhirTanggalLint:= StrToDate(akhirTanggal,'dd/mm/yyyy','/'); // konversi keduanya ke 'date angka'
+    waktuSekarangLint:= StrToTime(TimeToStr(WaktuSekarang)); // ambil dan simpan 'waktu angka' sekarang
+    if      (pilihan = 1) AND (pos('ON',simbol) = 0) AND
+            ((akhirTanggalLint > sekarangTanggalLint) or
+            ((akhirTanggalLint = sekarangTanggalLint) and
+            (waktuAkhirLint <= waktuSekarangLint))) AND
+            ((awalTanggalLint < sekarangTanggalLint) or
+            ((awalTanggalLint = sekarangTanggalLint) and
+            (waktuAwalLint <= waktuSekarangLint))) then
+                hasil:=3 // jika pilihan 'data check-in' dan belum check-in dan lewat jadwal check-in dan belum jadwal check-out.. hasil = 3
+    else if (pos('ON',simbol) > 0) AND (pilihan = 2) AND
+            ((akhirTanggalLint > sekarangTanggalLint) or
+            ((akhirTanggalLint = sekarangTanggalLint) and
+            (waktuAkhirLint >= waktuSekarangLint))) then
+                hasil:=4 // jika pilihan 'data check-out' dan sudah check-in dan belum lewat jadwal check-out.. hasil = 4
+    else if (pilihan = 1) AND (pos('ON',simbol) = 0) AND
+            (awalTanggalLint = sekarangTanggalLint) AND
+            (waktuAwalLint > waktuSekarangLint) then
+                hasil:=1 // jika pilihan 'data check-in' dan belum check-in dan ini jadwal awal check-in dan belum waktunya.. hasil = 1
+    else if (pos('ON',simbol) > 0) AND (pilihan = 2) AND 
+            ((akhirTanggalLint < sekarangTanggalLint) or
+            ((akhirTanggalLint = sekarangTanggalLint) and
+            (waktuAkhirLint <= waktuSekarangLint))) then
+                hasil:=2 // jika pilihan 'data check-out' dan sudah check-in dan melewati jadwal check-out.. hasil = 2
+    else if (pilihan = 1) AND (pos('ON',simbol) = 0) AND
+            ((akhirTanggalLint < sekarangTanggalLint) or
+            ((akhirTanggalLint = sekarangTanggalLint) and
+            (waktuAkhirLint < waktuSekarangLint))) then
+                hasil:=5; // jika pilihan 'data check-in' dan belum check in dan lewat jadwal check-out.. hasil = 5
+      if hasil = 3 then // jika boleh check-in..
+        begin
+        writeln('(',AwalTanggal,') Sampai (',AkhirTanggal,') ');
+        Textcolor(green);
+        writeln('Dipersilahkan check-in');
+        Textcolor(white);
+        for a:=1 to 4 do // cetak 4 baris data pertama (data pribadi) ke layar
+          writeln(BacaBaris[a]);
+        writeln;
+        ketemuData:= ketemuData + 1; // jumlah data ditemukan
+        ketemuData4:= false; // cegah readln ngestuk saat pencarian data
+        end
+      else if hasil = 4 then // jika sudah check-in dan belum lewat jadwal check-out..
+        begin
+        writeln('(',AwalTanggal,') Sampai (',AkhirTanggal,') ');
+        Textcolor(green);
+        writeln('Dipersilahkan check-out');
+        Textcolor(white);
+        for a:=1 to 4 do // cetak 4 baris data pertama (data pribadi) ke layar
+          writeln(BacaBaris[a]);
+        writeln;
+        ketemuData:= ketemuData + 1; // jumlah data ditemukan + 1
+        ketemuData4:= false;
+        end
+      else if hasil = 1 then // jika jadwal check-in hari ini dan belum boleh check-in..
+        begin
+        writeln('(',AwalTanggal,') Sampai (',AkhirTanggal,') ');
+        Textcolor(red);
+        writeln('Boleh check-in dalam (',(TimeToStr(waktuSekarangLint - waktuAwalLint)),')');
+        Textcolor(white);
+        for a:=1 to 4 do // cetak 4 baris data pertama (data pribadi) ke layar
+          writeln(BacaBaris[a]);
+        writeln;
+        ketemuData:= ketemuData + 1; // jumlah data ditemukan + 1
+        ketemuData4:= false;
+        end
+      else if hasil = 2 then // jika sudah check-in dan jadwal check-out sudah lewat..
+        begin
+        writeln('(',AwalTanggal,') Sampai (',AkhirTanggal,') ');
+        Textcolor(red);
+        writeln('Melebihi batas check out selama (',(TimeToStr(waktuSekarangLint - waktuAkhirLint)),')');
+        Textcolor(white);
+        for a:=1 to 4 do // cetak 4 baris data pertama (data pribadi) ke layar
+          writeln(BacaBaris[a]);
+        writeln;
+        ketemuData:= ketemuData + 1; // jumlah data ditemukan + 1
+        ketemuData4:= false;
+        end
+      else if hasil = 5 then // jika belum pernah check-in dan jadwal check-out sudah lewat..
+        begin
+        writeln('(',AwalTanggal,') Sampai (',AkhirTanggal,') ');
+        Textcolor(red);
+        writeln('Tidak pernah check-in!');
+        Textcolor(white);
+        for a:=1 to 4 do // cetak 4 baris data pertama (data pribadi) ke layar
+          writeln(BacaBaris[a]);
+        writeln;
+        ketemuData:= ketemuData + 1; // jumlah data ditemukan + 1
+        ketemuData4:= false;
+        end;
+    end;
+  if (ketemuData4 = false) AND (not(ketemuData = 0)) AND (ketemuData mod 4 = 0) then
+    begin // jika sudah mencetak data setelah kelipatan 4 dan sudah menemukan data dan jumlah cetak data kelipatan 4..
+    cetakInvalid(0,0,6,lagi); // menanyakan jika pengguna ingin melanjutkan
+    if lagi in ['t','T'] then // jika tidak..
+      begin
+      close(Data); // tutup data
+      goto Penutup; // menuju penutup
+      end
+    else if not (lagi in ['y','Y']) then // jika selain 't','T','y','Y' maka.. keluar
+      begin
+      writeln('Kami anggap anda tidak ingin');
+      close(Data); // tutup data 
+      goto Penutup; // menuju penutup
+      end;
+    writeln; // beri jarak
+    ketemuData4:= true; // agar program tidak macet di readln
+    end;
+  end; // endwhile 
+if eof(Data) then // jika file berakhir..
+  begin
+  close(Data); // tutup file
+  Textcolor(red);
+  if ketemuData > 0 then // jika data ditemukan..
+    writeln('Daftar sudah habis!')
+  else // jika tidak ditemukan..
+    writeln('Data tidak ada!');
+  Textcolor(white);
+  end;
+Penutup:
+end; // end prosedur
+
 
 procedure CheckIn; // check-in data pengguna di file 'Sedia.txt'
 var
