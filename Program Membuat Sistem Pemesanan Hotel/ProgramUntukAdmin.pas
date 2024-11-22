@@ -1058,211 +1058,6 @@ if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
     end;
 end; // end prosedur
 
-procedure HapusUlasan; // menghapus ulasan (staff menjaga janjinya untuk tidak menutup suara publik)
-var
-  pilihan,pilihan2: integer;
-  ulang: char;
-  password,pemanduStr: string;
-  BacaBaris: array [1..4] of string;
-  BacaSedia: array [1..700] of string;
-  a,b,pencacahA,pemanduA,pemanduB,pemanduC,pemanduUlas,posisiSalah: integer;
-  Ulas: text;
-label Awal,UlangInputPilihan,UlangInputPilihan2,UlangInputPassword,
-      Penutup;
-begin
-pencacahA:=1; pemanduA:=0; pemanduB:=4; pemanduC:= 0; pemanduUlas:=0; {inisialisasi}
-assign(Ulas,'Ulasan.txt'); // menghubungkan variabel ke file
-
-clrscr;
-reset(Ulas); // buka file untuk dibaca
-for a:=1 to 4 do // baca dan tulis judul file ulasan
-  begin
-  readln(Ulas, BacaBaris[a]);
-  writeln(BacaBaris[a]);
-  end;
-writeln;
-while not eof(Ulas) do // selama file belum berakhir..
-  begin
-  readln(Ulas, BacaSedia[pencacahA]); // mencari kata kunci 'Pengguna'
-  if pos('Pengguna',BacaSedia[pencacahA]) > 0 then // jika ditemukan..
-    begin
-    pemanduUlas:= pemanduUlas + 1; // hitung nomor ulasan
-    for b:=1 to 6 do // baca seluruh baris ulasan
-      begin
-      pencacahA:= pencacahA + 1; // pemandu BacaSedia
-      readln(Ulas, BacaSedia[pencacahA]); // baca baris file
-      if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then // jika kata kunci 'Bintang :' ditemukan..
-        break; // hentikan
-      end; 
-    pencacahA:= pencacahA + 1; // majukan slot array
-    end;
-  end;
-close(Ulas); // tutup file
-pencacahA:= 0; {inisialisasi baru}
-Awal:
-for a:=(pemanduB - 3) to pemanduB do // cetak 4 data ulasan
-  begin
-  pemanduC:= pemanduC + 1; // pemandu nomor ulasan
-  Textcolor(yellow);
-  write(pemanduC,'.'); // nomor ulasan
-  Textcolor(white);
-  for b:=1 to 7 do // membaca dan menulis baris sesuai batas maksimal baris data
-    begin
-    gotoxy(4,wherey); // menuju horizontal nomor empat
-    pencacahA:= pencacahA + 1; // pemandu BacaSedia
-    writeln(BacaSedia[pencacahA]); // cetak data
-    if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then // jika kata kunci 'Bintang :' ditemukan..
-      begin
-      gotoxy(1,wherey); // menuju horizontal pertama
-      break; // hentikan
-      end;
-    end;
-  if (pemanduC < pemanduB) AND (pemanduC < pemanduUlas) then
-    writeln // jika ulasan belum berakhir atau belum kelipatan 4.. beri jarak
-  else if pemanduC = pemanduUlas then // jika semua ulasan telah dicetak..
-    begin
-    writeln;
-    Textcolor(red); // ubah warna text
-    writeln('Ulasan habis!');
-    Textcolor(white);
-    break; // hentikan
-    end;
-  end;
-pemanduB:= pemanduB + 4; // pemandu nomor ulasan yang ditampilkan
-garis('-');
-
-UlangInputPilihan:
-write('Selanjutnya / Hapus Ulasan / Keluar (1/2/3) : ');readln(pemanduStr); // input pilihan pengguna
-val(pemanduStr,pilihan,posisiSalah); // mencoba mengkonversi ke integer pilihan
-if posisiSalah > 0 then // jika gagal..
-  begin
-  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan jika pengguna ingin mengulangi
-  if ulang in ['y','Y'] then // jika ya.. kembali ke menginput pilihan
-    goto UlangInputPilihan
-  else // selain itu..
-    goto Penutup; // menuju penutup
-  end;
-case pilihan of // case sesuai pilihan pertama
-  1: // 'selanjutnya'
-    begin
-    if pemanduC = pemanduUlas then // jika file berakhir..
-      begin
-      Textcolor(red);
-      writeln('Semua ulasan telah ditampilkan!'); // maka invalid..
-      Textcolor(white);
-      goto UlangInputPilihan; // dan menuju input pilihan
-      end
-    else // jika file belum berakhir..
-      begin
-      garis('-'); // beri pembatas yaitu garis
-      goto Awal; // menuju 'Awal'
-      end;
-    end;
-  2: // 'Hapus ulasan'
-    begin
-    UlangInputPassword:
-    write('Masukkan password Hotel (konfirmasi) : ');readln(password); // input password admin
-    if not cekPassword(password) then // jika password invalid..
-      begin
-      Textcolor(red);
-      write('Password invalid!');
-      Textcolor(white);
-      cetakInvalid(0,1,0,ulang); // menanyakan jika pengguna ingin mengulangi
-      if ulang in ['y','Y'] then // jika ya.. kembali menginput password
-        goto UlangInputPassword
-      else
-        goto Penutup; // selain itu.. menuju penutup
-      end;
-    UlangInputPilihan2:
-    write('Masukkan nomor komentar : ');readln(pemanduStr); // input pilihan pengguna
-    val(pemanduStr,pilihan2,posisiSalah); // coba konversi ke angka
-    if posisiSalah > 0 then // jika gagal..
-      begin
-      cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
-      if ulang in ['y','Y'] then // jika ya.. kembali menginput pilihan
-        goto UlangInputPilihan
-      else
-        goto Penutup; // selain itu.. menuju penutup
-      end;
-    if (pilihan2 < 1) OR (pilihan2 > pemanduUlas) then
-      begin
-      cetakInvalid(1,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
-      if ulang in ['y','Y'] then // jika ya.. kembali menginput pilihan
-        goto UlangInputPilihan
-      else
-        goto Penutup; // selain itu.. menuju penutup
-      end;
-    clrscr;
-    Textcolor(red);
-    garis('-'); // pembatas
-    Textcolor(white);
-    pencacahA:= 1; pemanduB:=0; {inisialisasi baru}
-    for a:=1 to pemanduUlas do // cari kordinat ulasan
-      begin
-      pemanduB:= pemanduB + 1; // pemandu nomor ulasan {a rentan error}
-      if pemanduB = pilihan2 then
-        break // jika sudah sampai nomor ulasan yang dipilih.. hentikan
-      else // jika belum
-        for b:=1 to 6 do // skip ulasan sampai baris terakhir ulasan
-          begin
-          pencacahA:= pencacahA + 1; // skip ulasan
-          if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then
-            break; // jika sudah mencapai baris akhir ulasan.. hentikan
-          end;
-      pencacahA:= pencacahA + 1; // majukan slot array (ulasan selanjutnya)
-      end;
-    for a:=1 to 7 do // cetak ulasan ke layar untuk konfirmasi
-      begin
-      pemanduA:= pemanduA + 1; // penghitung baris ulasan yang dipilih
-      writeln(BacaSedia[pencacahA]); // cetak ulasan
-      if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then
-        break; // jika sudah mencapai baris akhir ulasan.. hentikan
-      pencacahA:= pencacahA + 1;
-      end;
-    Textcolor(red);
-    garis('-');
-    Textcolor(yellow);
-    write('Konfirmasi penghapusan? (y/t) : ');readln(ulang); // input pilihan admin
-    Textcolor(white);
-    if not (ulang in ['y','Y']) then // jika tidak dikonfirmasi..
-      goto Penutup; // menuju penutup
-    pencacahA:= 0; pemanduB:=0; {inisialisasi baru}
-    rewrite(Ulas); // hapus data pada file dan buka file untuk ditulis
-    for a:=1 to 4 do
-      writeln(Ulas,BacaBaris[a]); // cetak judul ulasan
-    writeln(Ulas); // beri jarak
-    for a:=1 to (pemanduUlas - 1) do // cetak semua ulasan kecuali yang dipilih
-      begin
-      pemanduB:= pemanduB + 1; // pemandu nomor ulasan {a rentan error}
-      if pemanduB = pilihan2 then // jika sudah sampai nomor ulasan yang dipilih..
-        pencacahA:= pencacahA + pemanduA; // skip ulasan tersebut
-      for b:=1 to 7 do // cetak seluruh baris ulasan
-        begin
-        pencacahA:= pencacahA + 1;
-        writeln(Ulas,BacaSedia[pencacahA]); // cetak ulasan
-        if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then
-          break; // jika telah mencapai baris terakhir.. hentikan
-        end;
-      writeln(Ulas); // beri jarak
-      end;
-    close(Ulas); // tutup file
-    Textcolor(green); 
-    writeln('Komentar berhasil dihapus!'); // pesan ulasan telah dihapus
-    Textcolor(white);
-    end;
-  3: goto Penutup; // 'keluar'.. menuju penutup
-  otherwise
-    begin
-    cetakInvalid(1,1,0,ulang); // menanyakan jika pengguna ingin mengulangi
-    if ulang in ['y','Y'] then // jika ya.. kembali ke menginput pilihan
-      goto UlangInputPilihan
-    else // selain itu..
-      goto Penutup; // dan menuju penutup
-    end;
-  end; //endcaseof
-Penutup:
-end; // end procedure
-
 procedure CekKamar; // memeriksa kondisi kamar
 var 
   adaBi,kosongBi,adaDe,kosongDe,kamarInt,pilihan: integer;
@@ -1521,7 +1316,6 @@ if valid then // (rekursif) jika valid.. maka langkah selanjutnya dilakukan
 Penutup:
 end; // end prosedur
 
-
 procedure CekPenggunaHariIni; // memeriksa yang check-in atau check-out hari ini
 var
   Data: text;
@@ -1697,7 +1491,6 @@ if eof(Data) then // jika file berakhir..
   end;
 Penutup:
 end; // end prosedur
-
 
 procedure CheckIn; // check-in data pengguna di file 'Sedia.txt'
 var
@@ -2756,7 +2549,210 @@ close(Data); // tutup file
 Penutup:
 end; // end prosedur
 
- // hapus kalimat ini dan masukkan prosedur hapusulasan (1)
+procedure HapusUlasan; // menghapus ulasan (staff menjaga janjinya untuk tidak menutup suara publik)
+var
+  pilihan,pilihan2: integer;
+  ulang: char;
+  password,pemanduStr: string;
+  BacaBaris: array [1..4] of string;
+  BacaSedia: array [1..700] of string;
+  a,b,pencacahA,pemanduA,pemanduB,pemanduC,pemanduUlas,posisiSalah: integer;
+  Ulas: text;
+label Awal,UlangInputPilihan,UlangInputPilihan2,UlangInputPassword,
+      Penutup;
+begin
+pencacahA:=1; pemanduA:=0; pemanduB:=4; pemanduC:= 0; pemanduUlas:=0; {inisialisasi}
+assign(Ulas,'Ulasan.txt'); // menghubungkan variabel ke file
+
+clrscr;
+reset(Ulas); // buka file untuk dibaca
+for a:=1 to 4 do // baca dan tulis judul file ulasan
+  begin
+  readln(Ulas, BacaBaris[a]);
+  writeln(BacaBaris[a]);
+  end;
+writeln;
+while not eof(Ulas) do // selama file belum berakhir..
+  begin
+  readln(Ulas, BacaSedia[pencacahA]); // mencari kata kunci 'Pengguna'
+  if pos('Pengguna',BacaSedia[pencacahA]) > 0 then // jika ditemukan..
+    begin
+    pemanduUlas:= pemanduUlas + 1; // hitung nomor ulasan
+    for b:=1 to 6 do // baca seluruh baris ulasan
+      begin
+      pencacahA:= pencacahA + 1; // pemandu BacaSedia
+      readln(Ulas, BacaSedia[pencacahA]); // baca baris file
+      if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then // jika kata kunci 'Bintang :' ditemukan..
+        break; // hentikan
+      end; 
+    pencacahA:= pencacahA + 1; // majukan slot array
+    end;
+  end;
+close(Ulas); // tutup file
+pencacahA:= 0; {inisialisasi baru}
+Awal:
+for a:=(pemanduB - 3) to pemanduB do // cetak 4 data ulasan
+  begin
+  pemanduC:= pemanduC + 1; // pemandu nomor ulasan
+  Textcolor(yellow);
+  write(pemanduC,'.'); // nomor ulasan
+  Textcolor(white);
+  for b:=1 to 7 do // membaca dan menulis baris sesuai batas maksimal baris data
+    begin
+    gotoxy(4,wherey); // menuju horizontal nomor empat
+    pencacahA:= pencacahA + 1; // pemandu BacaSedia
+    writeln(BacaSedia[pencacahA]); // cetak data
+    if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then // jika kata kunci 'Bintang :' ditemukan..
+      begin
+      gotoxy(1,wherey); // menuju horizontal pertama
+      break; // hentikan
+      end;
+    end;
+  if (pemanduC < pemanduB) AND (pemanduC < pemanduUlas) then
+    writeln // jika ulasan belum berakhir atau belum kelipatan 4.. beri jarak
+  else if pemanduC = pemanduUlas then // jika semua ulasan telah dicetak..
+    begin
+    writeln;
+    Textcolor(red); // ubah warna text
+    writeln('Ulasan habis!');
+    Textcolor(white);
+    break; // hentikan
+    end;
+  end;
+pemanduB:= pemanduB + 4; // pemandu nomor ulasan yang ditampilkan
+garis('-');
+
+UlangInputPilihan:
+write('Selanjutnya / Hapus Ulasan / Keluar (1/2/3) : ');readln(pemanduStr); // input pilihan pengguna
+val(pemanduStr,pilihan,posisiSalah); // mencoba mengkonversi ke integer pilihan
+if posisiSalah > 0 then // jika gagal..
+  begin
+  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan jika pengguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. kembali ke menginput pilihan
+    goto UlangInputPilihan
+  else // selain itu..
+    goto Penutup; // menuju penutup
+  end;
+case pilihan of // case sesuai pilihan pertama
+  1: // 'selanjutnya'
+    begin
+    if pemanduC = pemanduUlas then // jika file berakhir..
+      begin
+      Textcolor(red);
+      writeln('Semua ulasan telah ditampilkan!'); // maka invalid..
+      Textcolor(white);
+      goto UlangInputPilihan; // dan menuju input pilihan
+      end
+    else // jika file belum berakhir..
+      begin
+      garis('-'); // beri pembatas yaitu garis
+      goto Awal; // menuju 'Awal'
+      end;
+    end;
+  2: // 'Hapus ulasan'
+    begin
+    UlangInputPassword:
+    write('Masukkan password Hotel (konfirmasi) : ');readln(password); // input password admin
+    if not cekPassword(password) then // jika password invalid..
+      begin
+      Textcolor(red);
+      write('Password invalid!');
+      Textcolor(white);
+      cetakInvalid(0,1,0,ulang); // menanyakan jika pengguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput password
+        goto UlangInputPassword
+      else
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+    UlangInputPilihan2:
+    write('Masukkan nomor komentar : ');readln(pemanduStr); // input pilihan pengguna
+    val(pemanduStr,pilihan2,posisiSalah); // coba konversi ke angka
+    if posisiSalah > 0 then // jika gagal..
+      begin
+      cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput pilihan
+        goto UlangInputPilihan
+      else
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+    if (pilihan2 < 1) OR (pilihan2 > pemanduUlas) then
+      begin
+      cetakInvalid(1,1,0,ulang); // mencetak pesan invalid dan menanyakan jika penguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput pilihan
+        goto UlangInputPilihan
+      else
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+    clrscr;
+    Textcolor(red);
+    garis('-'); // pembatas
+    Textcolor(white);
+    pencacahA:= 1; pemanduB:=0; {inisialisasi baru}
+    for a:=1 to pemanduUlas do // cari kordinat ulasan
+      begin
+      pemanduB:= pemanduB + 1; // pemandu nomor ulasan {a rentan error}
+      if pemanduB = pilihan2 then
+        break // jika sudah sampai nomor ulasan yang dipilih.. hentikan
+      else // jika belum
+        for b:=1 to 6 do // skip ulasan sampai baris terakhir ulasan
+          begin
+          pencacahA:= pencacahA + 1; // skip ulasan
+          if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then
+            break; // jika sudah mencapai baris akhir ulasan.. hentikan
+          end;
+      pencacahA:= pencacahA + 1; // majukan slot array (ulasan selanjutnya)
+      end;
+    for a:=1 to 7 do // cetak ulasan ke layar untuk konfirmasi
+      begin
+      pemanduA:= pemanduA + 1; // penghitung baris ulasan yang dipilih
+      writeln(BacaSedia[pencacahA]); // cetak ulasan
+      if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then
+        break; // jika sudah mencapai baris akhir ulasan.. hentikan
+      pencacahA:= pencacahA + 1;
+      end;
+    Textcolor(red);
+    garis('-');
+    Textcolor(yellow);
+    write('Konfirmasi penghapusan? (y/t) : ');readln(ulang); // input pilihan admin
+    Textcolor(white);
+    if not (ulang in ['y','Y']) then // jika tidak dikonfirmasi..
+      goto Penutup; // menuju penutup
+    pencacahA:= 0; pemanduB:=0; {inisialisasi baru}
+    rewrite(Ulas); // hapus data pada file dan buka file untuk ditulis
+    for a:=1 to 4 do
+      writeln(Ulas,BacaBaris[a]); // cetak judul ulasan
+    writeln(Ulas); // beri jarak
+    for a:=1 to (pemanduUlas - 1) do // cetak semua ulasan kecuali yang dipilih
+      begin
+      pemanduB:= pemanduB + 1; // pemandu nomor ulasan {a rentan error}
+      if pemanduB = pilihan2 then // jika sudah sampai nomor ulasan yang dipilih..
+        pencacahA:= pencacahA + pemanduA; // skip ulasan tersebut
+      for b:=1 to 7 do // cetak seluruh baris ulasan
+        begin
+        pencacahA:= pencacahA + 1;
+        writeln(Ulas,BacaSedia[pencacahA]); // cetak ulasan
+        if pos('Bintang  :',BacaSedia[pencacahA]) > 0 then
+          break; // jika telah mencapai baris terakhir.. hentikan
+        end;
+      writeln(Ulas); // beri jarak
+      end;
+    close(Ulas); // tutup file
+    Textcolor(green); 
+    writeln('Komentar berhasil dihapus!'); // pesan ulasan telah dihapus
+    Textcolor(white);
+    end;
+  3: goto Penutup; // 'keluar'.. menuju penutup
+  otherwise
+    begin
+    cetakInvalid(1,1,0,ulang); // menanyakan jika pengguna ingin mengulangi
+    if ulang in ['y','Y'] then // jika ya.. kembali ke menginput pilihan
+      goto UlangInputPilihan
+    else // selain itu..
+      goto Penutup; // dan menuju penutup
+    end;
+  end; //endcaseof
+Penutup:
+end; // end procedure
 
   {program utama}
 begin
