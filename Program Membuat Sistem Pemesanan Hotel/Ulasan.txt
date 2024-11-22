@@ -1,0 +1,25 @@
+====================================================
+                ULASAN PENGGUNA HOTEL
+   (*Note: Pemberi ulasan harus pernah memesan!*)
+====================================================
+
+Pengguna : VallentinoG
+Ulasan   : saya sangat bangga dengan hotel ini!
+Bintang  : *****
+
+Pengguna : RioDe
+Ulasan   : L
+Bintang  : *
+
+Pengguna : Zakyman
+Ulasan   : Banyak harapan saya, tetapi buktinya nihil! harga hotel sangat tidak masuk akal!
+Bintang  : *
+
+Pengguna : SatriyaJ
+Ulasan   : biasa aja
+Bintang  : **
+
+Pengguna : RamadhaniPasha
+Ulasan   : Sangat puas dengan pelayanan hotel ini! sangat direkomendasikan
+Bintang  : *****
+
