@@ -443,7 +443,569 @@ if (opsi2 > 0) or (opsi3 > 0) then
 end;
 
   {Prosedur utama: }
- // hapus kalimat ini dan masukkan prosedur datalengkappemesanan (1)
+procedure DataLengkapPemesanan; //Pesan Kamar secara online
+var 
+    kamar,jenis,umur: integer;
+    a,b,pemanduB,posisiSalah: integer;
+    BacaBaris,awalTanggal,akhirTanggal,pemanduStr: string;
+    ulang,struk,pilihan,simbol: char;
+    awalTanggalInLint,akhirTanggalInLint: TDateTime;
+    awalTanggalLint,akhirTanggalLint,batasWaktuLint: TDateTime;
+    biaya,biayaSPajak: double;
+    valid: boolean;
+    adaBi,adaDe,kosongBi,kosongDe: integer;
+    Data: text;
+    hari1,hari2,bulan1,bulan2,tahun1,tahun2: string;
+label
+  UlangInputKamar, UlangInputJenisKamar,
+  UlangInputNama, UlangInputUmur,
+  UlangInputNik, UlangInputKredit,
+  UlangInputTanggalSatu,
+  UlangInputTanggalDua,Penutup;
+begin
+pemanduB:=0; valid:= true;
+informasi_d.AwalWaktuPesan:= '13:00:00';
+informasi_d.AkhirWaktuPesan:= '12:00:00';
+batasWaktuLint:= StrToTime('12:30:00',':'); {inisialisasi}
+assign(Data,'Data.txt'); // menghubungkan variabel kepada file
+
+clrscr;
+garis('=');
+writeln('  PEMESANAN KAMAR ONLINE');
+garis('-');
+writeln('Menu kamar: ');
+writeln(' 1. Kamar Deluxe, anti bocor suara');
+writeln(' 2. Kamar Biasa, suara menggelegar');
+writeln;
+writeln('*Note: Jika hari ini melewati jam 12:30 maka hanya boleh memesan');
+writeln('       kamar pada besok hari! selain itu hubungi resepsionis');
+garis('-');
+
+{Input pengguna: }
+UlangInputKamar:
+write('Berapa kamar yang ingin dibeli? : ');readln(pemanduStr); // input pelanggan
+  {cek kamar: }
+val(pemanduStr,kamar,posisiSalah); // mencoba menkonversi ke integer 'kamar'
+if posisiSalah > 0 then //--jika gagal konversi..
+  begin
+  Textcolor(red);
+  write('Input kamar haruslah angka!'); // maka invalid
+  Textcolor(white);
+  cetakInvalid(0,1,0,ulang); // menanyakan pelanggan jika ingin mengulang kembali
+  if ulang in ['y','Y'] then // jika pilihan 'ya'..
+    goto UlangInputKamar // menuju label 'UlangInputKamar'
+  else 
+    begin
+    valid:= false; // selain itu.. maka invalid..
+    goto Penutup; //--dan melompat ke penutup
+    end;
+  end;
+if kamar < 1 then //--jika jumlah kurang daru 1..
+  begin
+  valid:= false; // maka invalid..
+  writeln('Baiklah!');
+  goto Penutup; //--dan melompat ke penutup
+  end;
+
+UlangInputNama: //NAMA
+write('Masukkan nama anda: ');readln(informasi_p.nama); // input 'Nama' pengguna
+    {cek nama: }
+cekNama(informasi_p.nama,valid); // validasi input 'nama' dengan prosedur
+if not valid then //--jika 'nama' invalid 
+  begin 
+  cetakInvalid(0,0,3,ulang); // (0,0,3) menanyakan pelanggan jika ingin mengulang kembali
+  if ulang in ['y','Y'] then // jika input adalah 'y' atau 'Y'..
+    goto UlangInputNama // maka menuju label UlangInputNama
+  else 
+    goto Penutup; //--selain itu.. melompat ke label penutup
+  end;
+    {-----------}
+
+UlangInputNik: //NIK
+write('Masukkan NIK anda: ');readln(informasi_p.nik); // input 'NIK' pengguna
+    {cek NIK: }
+cekInteger('NIK',informasi_p.nik,16,valid); // memeriksa kevalidan 'NIK'
+if not valid then //--jika invalid..
+  begin 
+  cetakInvalid(0,0,4,ulang); // (0,0,4) menanyakan pelanggan jika ingin mengulang kembali
+  if ulang in ['y','Y'] then // jika input adalah 'Y' atau 'y'..
+    goto UlangInputNik // maka kembali menginput 'NIK'
+  else if ulang in ['1'] then // jika input adalah '1'..
+    goto UlangInputNama // maka kembali ke label UlangInputNama atau kembali menginput nama
+  else 
+    goto Penutup; //--selain itu.. melompat ke label penutup
+  end;
+    {-----------}
+
+UlangInputUmur: //UMUR
+write('Masukkan umur anda: ');readln(informasi_p.umur); // input 'umur' pengguna
+    {cek umur: }
+cekUmur(informasi_p.umur,valid); // memeriksa kevalidan 'umur'
+if not valid then //--jika invalid..
+  begin 
+  cetakInvalid(0,0,4,ulang); // menanyakan pelanggan jika ingin mengulang kembali
+  if ulang in ['y','Y'] then // jika pilihan 'y' atau 'Y' maka kembali menginput 'umur'
+    goto UlangInputUmur
+  else if ulang in ['1'] then // jika pilihan '1' maka kembali ke menginput 'nama'
+    goto UlangInputNama
+  else
+    goto Penutup; //--selain itu maka menuju Penutup
+  end;
+    {-----------}
+
+UlangInputKredit: //KREDIT
+write('Masukkan nomor kredit anda: ');readln(informasi_p.nomor_kredit); // input 'nomor kredit'
+    {cek kredit: }
+cekInteger('Nomor Kredit',informasi_p.nomor_kredit,16,valid); // validasi kredit
+if valid then
+  cekKredit(informasi_p.nomor_kredit,valid); // (rekursif) jika valid, maka memeriksa jika kredit bernomor '0' 16 angka
+if not valid then //--jika invalid..
+  begin 
+    cetakInvalid(0,0,4,ulang); // menanyakan pelanggan jika ingin mengulang kembali
+    if ulang in ['y','Y'] then // jika ya.. maka menginput kembali kredit
+      goto UlangInputKredit
+    else if ulang in ['1'] then // jika pilihan 'dari awal=1' maka kembali ke menginput 'nama'
+      goto UlangInputNama
+    else
+      goto Penutup; // selain itu.. menuju penutup
+  end;
+    {-----------}
+Penutup: // (label penutup) ditempatkan disini karena bug, program tidak bisa melewati 'FOR..TO' dibawah ini
+if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
+  for b:=1 to kamar do // pengguna tidak lagi menginput data pribadi, sekarang input data pemesanan sampai jumlah kamar..
+    begin              // ..yang dibeli
+    pemanduB:= pemanduB + 1; // pemandu array 'informasi_tanggal', karena pencacah 'FOR..TO' rentan mengalami bug
+    UlangInputJenisKamar:
+    write('Pilih kamar jenis Deluxe atau Biasa (1/2) / keluar(3) : ');readln(pemanduStr); // input jenis kamar
+    val(pemanduStr,jenis,posisiSalah); // coba konversi ke integer 'jenis'
+    if posisiSalah > 0 then // jika ada kesalahan konversi..
+      begin
+      cetakInvalid(2,2,0,ulang); // (2,2,0) cetak 'pilihan invalid!' dan menanyakan jika ingin mengulang
+      if ulang in ['y','Y'] then // jika ya.. menginput jenis kamar kembali
+        goto UlangInputJenisKamar
+      else if ulang in ['1'] then // jika input '1'.. kembali ke menginput nama
+        goto UlangInputNama
+      else 
+        begin
+        valid:= false; // selain itu, maka invalid..
+        goto Penutup; // lalu menuju label penutup
+        end;
+      end;
+    if jenis = 3 then // jika input '3', maka keluar dengan menjadikan 'valid' ke false..
+      begin
+      valid:= false;
+      goto Penutup; // dan menuju label penutup
+      end;
+    if not (jenis in [1,2,3]) then // selain ketiga pilihan itu..
+      begin
+      Textcolor(red);
+      write('Pilihan haruslah 1 atau 2!'); // maka invalid
+      Textcolor(white);
+      cetakInvalid(0,2,0,ulang); // (0,2,0) menanyakan pengguna jika ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. menginput kembali pilihan kamar
+        goto UlangInputJenisKamar
+      else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+        goto UlangInputNama
+      else
+        begin
+        valid:= false; // selain itu.. invalid dan menuju penutup
+        goto Penutup;
+        end;
+      end;
+    if jenis = 1 then // menentukan nilai kamar sesuai pilihan
+      informasi_d.kamar:='De' // jika pilihan '1'.. maka kamar Deluxe dipilih
+    else if jenis = 2 then
+      informasi_d.kamar:='Bi'; // jika pilihan '2'.. maka kamar Biasa dipilih
+
+    UlangInputTanggalSatu: //TANGGAL AWAL
+    write('Masukkan waktu awal pesanan anda (dd/mm/yyyy) : ');readln(informasi_t[pemanduB].AwalPemesanan);//input tanggal awal
+        {cek dan konversi tanggal: }
+    konversiTanggal(informasi_t[pemanduB].AwalPemesanan,hari1,bulan1,tahun1,valid); // mengonversi dan cek jumlah karakter tanggal
+    if valid then
+      cekTanggal(hari1,bulan1,tahun1,valid); // (rekursif) jika valid.. maka prosedur 'cekTanggal' dipanggil
+    if not valid then // jika invalid..
+      begin 
+      cetakInvalid(0,0,4,ulang); // menanyakan jika pengguna ingin mengulangi input
+      if ulang in ['y','Y'] then // jika ya.. maka menginput kembali tanggal awal
+        goto UlangInputTanggalSatu
+      else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+        goto UlangInputNama
+      else
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+        {--------------------------}
+
+    UlangInputTanggalDua: //TANGGAL AKHIR
+    write('Masukkan waktu akhir pesanan anda (dd/mm/yyyy): ');readln(informasi_t[pemanduB].AkhirPemesanan);//input tanggal akhir
+        {cek dan konversi tanggal: }
+    konversiTanggal(informasi_t[pemanduB].AkhirPemesanan,hari2,bulan2,tahun2,valid); // konversi sekaligus cek tanggal
+    if valid then
+      cekTanggal(hari2,bulan2,tahun2,valid); // (rekursif) mengecek secara detail kevalidan tanggal, menggantikan IOresult
+    if not valid then // jika invalid..
+      begin 
+      cetakInvalid(0,0,4,ulang); // menanyakan pengguna jika ingin mengulang kembali
+      if ulang in ['y','Y'] then // jika ya, maka menginput tanggal akhir
+        goto UlangInputTanggalDua
+      else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+        goto UlangInputNama
+      else 
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+        {--------------------------}
+
+    {Mempersiapkan sistem: }
+      //cek kamar pada waktu tersebut
+    cekTanggalAwalAkhir(hari1,bulan1,tahun1,hari2,bulan2,tahun2,valid,
+        'Tidak boleh memesan ke masa lalu!','Tanggal awal ke akhir tidak boleh mundur atau sama!',2); // memeriksa tanggal..
+    if not valid then //jika invalid..     // ..awal dan akhir, (2) artinya tanggal awal tidak boleh kurang dari tanggal sekarang
+      begin
+      cetakInvalid(0,0,4,ulang); // menanyakan pengguna jika ingin mengulang kembali 
+      if ulang in ['y','Y'] then // jika ya.. maka kembali ke menginput tanggal awal pemesanan (2)
+        goto UlangInputTanggalSatu
+      else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama (2)
+        goto UlangInputNama
+      else
+        goto Penutup; // selain itu.. invalid dan menuju penutup (2)
+      end
+    else // selain itu..
+      begin
+      informasi_t[pemanduB].AwalPemesanan:= hari1 +'/'+ bulan1 +'/'+ tahun1; // tanggal awal disatukan
+      informasi_t[pemanduB].AkhirPemesanan:= hari2 +'/'+ bulan2 +'/'+ tahun2; // tanggal akhir disatukan
+      end;
+    awalTanggalInLint:= StrToDate(informasi_t[b].AwalPemesanan,'dd/mm/yyyy','/'); // konversi tanggal ke real 'Date'..
+    akhirTanggalInLint:= StrToDate(informasi_t[b].AkhirPemesanan,'dd/mm/yyyy','/'); // .. dan menyimpannya dalam var
+    if (awalTanggalInLint = StrToDate(DateToStr(WaktuSekarang))) AND // jika tanggal awal = tanggal sekarang..
+       (batasWaktuLint < StrToTime(TimeToStr(WaktuSekarang))) then // ..dan waktu sekarang sudah melewati batas waktu..
+      begin
+      Textcolor(red); // ubah warna teks selanjutnya menjadi merah
+      write('Jam sudah melewati 12:30'); // maka invalid, dan harus memesan secara offline pada hotel
+      Textcolor(white); // mengembalikan warna teks selanjutnya menjadi putih
+      writeln(', waktu awal pesanan tidak boleh hari ini!');
+      cetakInvalid(0,0,4,ulang); // menanyakan pengguna jika ingin mengulang kembali
+      if ulang in ['y','Y'] then // jika ya.. maka menginput kembali tanggal awal pemesanan
+        goto UlangInputTanggalSatu
+      else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+        goto UlangInputNama
+      else
+        begin
+        valid:= false; // selain itu.. invalid lalu menuju penutup
+        goto Penutup;
+        end;
+      end;
+    adaBi:=0; kosongBi:=0; adaDe:=0; kosongDe:=0; {inisialisasi}
+    reset(Data); // membuka file untuk dibaca
+    while not eof(Data) do // selama file belum berakhir (belum berada di baris terakhir)..
+      begin
+      readln(Data, simbol); // baca baris (mengecek penanda adanya data)
+      if simbol in ['$'] then // jika ditemukan '$'..
+        begin
+        for a:=1 to 6 do // lewati baris 1 sampai 6 data
+          readln(Data);
+        readln(Data,BacaBaris); // baca dan salin baris ke 7 data
+        for a:=8 to 9 do // lewati sisa baris datanya
+          readln(Data);
+        awalTanggal:= copy(BacaBaris,37,10); // salin data 'tanggal awal'nya
+        akhirTanggal:= copy(BacaBaris,55,10); // salin data 'tanggal akhir'nya
+        awalTanggalLint:= StrToDate(awalTanggal,'dd/mm/yyyy','/');
+        akhirTanggalLint:= StrToDate(akhirTanggal,'dd/mm/yyyy','/'); // konversi keduanya ke 'date angka' 
+        if ((awalTanggalLint <= awalTanggalInLint) and (akhirTanggalLint > awalTanggalInLint)) OR //jika awal tanggal = atau < dari input awal tanggal..
+          ((awalTanggalLint < akhirTanggalInLint ) and (akhirTanggalLint >= akhirTanggalInLint)) OR //..dan akhir tanggal > dari awal tanggal (true)
+          ((awalTanggalLint >= awalTanggalInLint) and (akhirTanggalLint <= akhirTanggalInLint)) then //jika awal tanggal < dari input akhir tanggal..
+            begin                                                                //..dan akhir tanggal lebih atau sama dengan input tanggal (true)
+            if pos('De',BacaBaris) > 0 then // jika keterangan kamar=Deluxe..    // jika awal tanggal lebih atau sama dengan input awal tanggal..
+              adaDe:= adaDe + 1; // maka jumlah kamar terisi De ditambah 1       //..dan akhir tanggal kurang atau sama dengan input akhir tanggal (true)
+            if pos('Bi',BacaBaris) > 0 then //jika keterangan kamar=Biasa..
+              adaBi:= adaBi + 1; // maka jumlah kamar terisi Biasa ditambah 1
+            if (pos('De',BacaBaris) = 0) AND (pos('Bi',BacaBaris) = 0) then // jika keterangan adalah angka..
+              begin
+              pemanduStr:=copy(BacaBaris,33,2);
+              val(pemanduStr,kamar,posisiSalah); // angka disalin dan dikonversi ke angka
+              if kamar > 5 then // jika nomor kamar lebih dari 5.. maka terisi Delux ditambah 1
+                adaDe:= adaDe + 1
+              else
+                adaBi:= adaBi + 1; // selain itu.. kamar adalah Biasa, dan terisi Biasa ditambah 1
+              end;
+            end;
+        end;
+      end;//endwhile
+    close(Data); // menutup data
+    kosongDe:= 5 - adaDe; 
+    kosongBi:= 5 - adaBi; {inisialisasi}
+    if (adaDe > 4) AND (adaBi > 4) then // jika kamar penuh pada tanggal tersebut.. maka invalid
+      begin
+      write('Dalam jadwal tersebut, ');
+      Textcolor(red); // ubah warna teks
+      write('seluruh kamar penuh!');
+      Textcolor(white); // mengembalikan warna teks
+      cetakInvalid(0,2,0,ulang); // menanyakan pengguna jika ingin mengulang kembali
+      if ulang in ['y','Y'] then // jika ya, maka kembali ke menginput tanggal awal pemesanan
+        goto UlangInputTanggalSatu
+      else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+        goto UlangInputNama
+      else
+        begin
+        valid:= false; // selain itu.. invalid dan menuju label penutup
+        goto Penutup;
+        end;
+      end;
+    if informasi_d.kamar = 'De' then // jika seluruh kamar tidak penuh, dan pilihan kamar adalah deluxe.. maka
+      if (adaDe > 4) AND (adaBi < 5) then // jika kamar Deluxe penuh tetapi kamar Biasa tersedia.. maka invalid
+        begin
+        write('Dalam jadwal tersebut, ');
+        Textcolor(red); // ubah warna teks
+        write('kamar Deluxe penuh');
+        Textcolor(white); // mengembalikan warna teks
+        write('! tetapi ');
+        Textcolor(green); // ubah warna teks
+        write('kamar Biasa tersisa');
+        Textcolor(white); // mengembalikan warna teks
+        write('(');
+        Textcolor(green); // ubah warna teks
+        write(kosongBi);
+        Textcolor(white); // mengembalikan warna teks
+        writeln(')'); // 'Dalam jadwal tersebut, kamar Deluxe penuh! tetapi kamar Biasa tersisa (..)'
+        cetakInvalid(0,0,5,ulang); // menanyakan pengguna jika ingin mengulang kembali
+        if ulang in ['y','Y'] then // jika ya, maka kembali ke menginput tanggal awal
+          goto UlangInputTanggalSatu
+        else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+          goto UlangInputNama
+        else
+          begin
+          valid:= false; // selain itu.. invalid dan menuju label penutup
+          goto Penutup;
+          end;
+        end;
+    if informasi_d.kamar = 'Bi' then // lalu jika jenis kamar adalah Biasa..
+      if (adaDe < 5) AND (adaBi > 4) then // dan jika kamar Biasa penuh dan kamar Deluxe tersedia.. maka invalid
+        begin
+        write('Dalam jadwal tersebut, ');
+        Textcolor(red); // ubah warna teks
+        write('kamar Biasa penuh');
+        Textcolor(white); // mengembalikan warna teks
+        write('! tetapi ');
+        Textcolor(green); // ubah warna teks
+        write('kamar Deluxe tersisa');
+        Textcolor(white); // mengembalikan warna teks
+        write('(');
+        Textcolor(green); // ubah warna teks
+        write(kosongDe);
+        Textcolor(white); // mengembalikan warna teks
+        writeln(')'); // 'Dalam jadwal tersebut, kamar Biasa penuh! tetapi kamar Deluxe tersisa (..)'
+        cetakInvalid(0,0,5,ulang); // menanyakan pengguna jika ingin mengulang kembali
+        if ulang in ['y','Y'] then // jika ya, maka kembali ke menginput tanggal awal
+          goto UlangInputTanggalSatu
+        else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+          goto UlangInputNama
+        else
+          begin
+          valid:= false; // selain itu.. invalid dan menuju label penutup
+          goto Penutup;
+          end;
+        end;
+      //Mencetak waktu input data
+    informasi_d.waktu:= FormatDateTime('hh:nn:ss', WaktuSekarang); // menyimpan waktu sekarang pada variabel
+    informasi_d.tanggal:= FormatDateTime('dd/mm/yyyy', WaktuSekarang); // menyimpan tanggal sekarang pada variabel
+      //Menghitung biaya
+    if informasi_d.kamar = 'Bi' then // jika jenis kamar adalah Biasa..
+      biaya:= (HitungHari(hari2,bulan2,tahun2) - HitungHari(hari1,bulan1,tahun1)) * 300 // maka harga adalah 300jt/hari
+    else if informasi_d.kamar = 'De' then // jika jenis kamar adalah Deluxe..
+      biaya:= (HitungHari(hari2,bulan2,tahun2) - HitungHari(hari1,bulan1,tahun1)) * 500; // maka harga adalah 500jt/hari
+    if biaya > 2000000000000000.0 then // jika harga terlalu banyak.. maka invalid
+      begin
+      write('Pesanan anda ');
+      Textcolor(red); // ubah warna teks
+      write('terlalu besar!');
+      Textcolor(white); // mengembalikan warna teks
+      writeln(' kami sarankan melakukan pembelian terpisah');
+      cetakInvalid(0,0,5,ulang); // menanyakan pengguna jika ingin mengulang kembali
+        if ulang in ['y','Y'] then // jika ya.. maka kembali ke menginput tanggal awal
+          goto UlangInputTanggalSatu
+        else if ulang in ['1'] then // jika 'dari awal'.. maka kembali ke menginput nama
+          goto UlangInputNama
+        else
+          begin
+          valid:= false; // selain itu.. invalid dan menuju label penutup
+          goto Penutup;
+          end;
+        end;
+    biayaSPajak:= HitungPajak(biaya) + biaya; // menghitung biaya setelah pajak
+    konversiBiaya(biaya,biayaSPajak,informasi_d.Biaya,informasi_d.BiayaSpajak); // menkonversi kedua biaya agar mudah dibaca
+    {----------------------}
+
+    clrscr; // membersihkan layar
+    val(informasi_p.umur,umur); // mencoba konversi informasi.umur menjadi integer 'umur'
+    if umur >= 5000 then // easter egg jika umur lebih dari 4999 tahun.. maka ada salam spesial dari Hotel
+      begin
+      write('Kami ucapkan salam pada ');
+      Textcolor(cyan); // mengubah warna teks selanjutnya menjadi biru muda
+      write('Sepuh');
+      Textcolor(white); // menyetel ulang warna teks menjadi putih atau mengembalikan warna teks asli
+      write(' yang berusia ');
+      Textcolor(yellow); // mengubah warna teks selanjutnya menjadi kuning
+      write(umur,' tahun');
+      Textcolor(white); // mengembalikan warna teks asli
+      writeln('!');
+      end;
+      {cetak pada layar untuk konfirmasi: }   //--mencetak pada program. semua data memiliki 101 karakter
+    for a:=1 to 101 do //++baris pertama adalah garis '=' sebanyak 101 karakter
+        write('=');
+    writeln; //++baris baru
+
+    {1} write(  '| NAMA : ',informasi_p.nama:25); //++mencetak baris ke-dua yaitu judul serta data yang dibuat
+    {35} write( '| NIK          : ',informasi_p.nik:49);{47} writeln('|'); //++
+    {1} write(  '| UMUR : ',informasi_p.umur:25); //++baris ke-tiga juga sama, judul dan data
+    {35} write( '| NOMOR KREDIT : ',informasi_p.nomor_kredit:49);{47} writeln('|'); //++
+
+    for a:=1 to 101 do //++baris ke-empat adalah garis '-'
+        write('-');
+    writeln; //++baris baru
+
+    write(     '| TANGGAL PESAN '); //++baris ke-lima adalah judul data
+    {17} write('|  WAKTU  ');
+    {27} write('| KAMAR ');
+    {35} write('|           PEMESANAN         ');
+    {65} write('|      BIAYA      ');
+    {83} write('| BIAYA SET PAJAK ');
+    {101} writeln('|'); //++
+
+    for a:=1 to 101 do //++baris ke-enam adalah garis '-'
+        write('-');
+    writeln; //++baris baru
+
+    write(     '| ', informasi_d.tanggal:14); //++baris ke-tujuh adalah data data yang dibuat
+    {17} write('| ', informasi_d.waktu:8);
+    {27} write('| ', informasi_d.kamar:6);
+    {35} write('| ',informasi_t[pemanduB].AwalPemesanan,' sampai ',informasi_t[pemanduB].AkhirPemesanan);
+    {65} write('| ',informasi_d.biaya:16);
+    {83} write('| ',informasi_d.biayaSpajak:16); //++
+    {101} writeln('|');
+
+    write(       '|               |         |       '); //++baris ke-delapan yaitu baris tambahan untuk data pemesanan
+    {35} write(  '| (',informasi_d.AwalWaktuPesan,')        (',informasi_d.AkhirWaktuPesan,')');
+    {65} writeln('|                 |                 |'); //++
+
+    for a:=1 to 101 do //++baris terakhir atau ke-sembilan adalah garis '='
+        write('=');
+    writeln; //++
+    writeln;
+
+    write('Konfirmasi pembelian? (y/t) ');readln(pilihan); // meminta pelanggan mengkonfirmasi pembelian
+    if not (pilihan in ['y','Y']) then // jika tidak ingin mengkonfirmasi..
+      begin
+      clrscr; // bersihkan layar
+      goto UlangInputTanggalSatu; // menuju label UlangInputTanggalSatu
+      end;
+    Textcolor(yellow); // mengubah warna teks selanjutnya menjadi kuning
+    for a:=5 downto 1 do // hitungan mundur dari 5 sampai 1
+      begin
+      write('Pembayaran selesai dalam ',a);
+      delay(1250); // memberikan jeda pada pemenuhan perintah
+      gotoxy(1,wherey); // kembali ke baris sebelumnya untuk menghapus dan menggantikan text pada baris itu
+      end;
+    Textcolor(green); // mengubah warna teks selanjutnya menjadi hijau
+    writeln('Pembayaran telah ditransfer!    ');
+    Textcolor(white); // mengembalikan warna text asli
+        {cetak pada file: }
+    Append(Data); // membuka file untuk ditulis tanpa membersihkan file
+    writeln(Data, '$'); // menulis simbol penanda adanya data untuk dibaca
+    for a:=1 to 101 do
+        write(Data,'='); //++baris pertama adalah garis '='
+    writeln(Data);
+
+    {1} write(Data,  '| NAMA : ',informasi_p.nama:25); //++mencetak baris ke-dua yaitu judul serta data yang dibuat
+    {35} write(Data, '| NIK          : ',informasi_p.nik:49);{47} writeln(Data,'|'); //++
+    {1} write(Data,  '| UMUR : ',informasi_p.umur:25); //++baris ke-tiga juga sama, judul dan data
+    {35} write(Data, '| NOMOR KREDIT : ',informasi_p.nomor_kredit:49);{47} writeln(Data,'|'); //++
+
+    for a:=1 to 101 do
+        write(Data,'-'); //++baris ke-empat adalah garis '-'
+    writeln(Data); //++
+
+    write(Data,      '| TANGGAL PESAN '); //++baris ke-lima adalah judul data
+    {17} write(Data, '|  WAKTU  ');
+    {27} write(Data, '| KAMAR ');
+    {35} write(Data, '|           PEMESANAN         ');
+    {65} write(Data, '|      BIAYA      ');
+    {83} write(Data, '| BIAYA SET PAJAK ');
+    {101} writeln(Data, '|'); //++
+
+    for a:=1 to 101 do //++baris ke-enam adalah garis '-'
+        write(Data,'-'); 
+    writeln(Data); //++
+
+    write(Data,     '| ', informasi_d.tanggal:14); //++baris ke-tujuh adalah data data yang dibuat
+    {17} write(Data,'| ', informasi_d.waktu:8);
+    {27} write(Data,'| ', informasi_d.kamar:6);
+    {35} write(Data,'| ',informasi_t[pemanduB].AwalPemesanan,' sampai ',informasi_t[pemanduB].AkhirPemesanan);
+    {65} write(Data,'| ',informasi_d.biaya:16);
+    {83} write(Data,'| ',informasi_d.biayaSpajak:16);
+    {101} writeln(Data, '|'); //++
+
+    write(Data,      '|               |         |       '); //++baris ke-delapan yaitu baris tambahan untuk data pemesanan
+    {35} write(Data,'| (',informasi_d.AwalWaktuPesan,')        (',informasi_d.AkhirWaktuPesan,')');
+    {65} writeln(Data, '|                 |                 |'); //++
+
+    for a:=1 to 101 do//++baris terakhir atau ke-sembilan adalah garis '='
+        write(Data,'='); 
+    writeln(Data); //++
+    writeln(Data); // memberi jarak untuk data baru nantinya
+    close(Data); // menutup file
+
+    write('Cetak struk? (y/t) ');readln(struk); // menanyakan jika pelanggan menginginkan struk
+    if struk in ['y','Y'] then // jika ya.. maka cetak struk
+      begin
+      for a:=1 to 101 do // baris pertama yaitu garis '='
+        write('=');
+      writeln;
+      writeln('Hotel Aman Sentosa Kota Palangkaraya, Keminting, Jl. Kecubung'); // baris ke-dua yaitu nama dan alamat hotel
+      for a:=1 to 101 do // baris ke-tiga yaitu garis '='
+        write('='); 
+      writeln;
+
+      write('| Nama Pembeli: ',informasi_p.nama); // baris ke-empat yaitu nama pembeli
+      gotoxy(101,wherey);writeln('|');
+
+      for a:=1 to 101 do // baris ke-lima adalah garis '-'
+          write('-');
+      writeln;
+
+      write(     '| TANGGAL PESAN '); // baris ke-enam adalah judul data
+      {17} write('|  WAKTU  ');
+      {27} write('| KAMAR ');
+      {35} write('|           PEMESANAN         ');
+      {65} write('|      BIAYA      ');
+      {83} write('| BIAYA SET PAJAK ');
+      {101} writeln('|');
+
+      for a:=1 to 101 do // baris ke-tujuh
+          write('-');
+      writeln;
+
+      write(     '| ', informasi_d.tanggal:14); // baris ke-delapan
+      {17} write('| ', informasi_d.waktu:8);
+      {27} write('| ', informasi_d.kamar:6);
+      {35} write('| ',informasi_t[pemanduB].AwalPemesanan,' sampai ',informasi_t[pemanduB].AkhirPemesanan);
+      {65} write('| ',informasi_d.biaya:16);
+      {83} write('| ',informasi_d.biayaSpajak:16);
+      {101} writeln('|');
+
+      write(       '|               |         |       '); // baris ke-sembilan
+      {35} write(  '| (',informasi_d.AwalWaktuPesan,')        (',informasi_d.AkhirWaktuPesan,')');
+      {65} writeln('|                 |                 |');
+
+      for a:=1 to 101 do // baris ke-sepuluh
+        write('=');
+      writeln;
+      end; // akhir cetak data
+    if (pemanduB < kamar) AND (struk in ['y','Y']) then // jika masih tersisa kamar yang ingin dibeli dan sudah cetak struk..
+      begin
+      Textcolor(yellow); // ubah warna teks
+      writeln('Tekan "ENTER"'); // maka menunggu tombol enter untuk melanjutkan mengisi data
+      Textcolor(white); // mengembalikan warna teks
+      readkey;
+      end;
+    end;
+end;  // end procedure
 
  procedure CekKamar; // memeriksa ketersediaan kamar
 var 
