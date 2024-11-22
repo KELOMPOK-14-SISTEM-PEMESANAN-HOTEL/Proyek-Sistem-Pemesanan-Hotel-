@@ -1,0 +1,42 @@
+$
+Nama   : Gacor69
+NIK    : 2222222222222222
+Kredit : 2222222222222222
+Ulasan : 1
+
+$
+Nama   : Bruhman
+NIK    : 3333333333333333
+Kredit : 3333333333333333
+Ulasan : 1
+
+$
+Nama   : VallentinoG
+NIK    : 2222222222222222
+Kredit : 2222222222222222
+Ulasan : 1
+
+$
+Nama   : RioDe
+NIK    : 2222222222222222
+Kredit : 2222222222222222
+Ulasan : 1
+
+$
+Nama   : Zakyman
+NIK    : 1234567891234567
+Kredit : 1234567891234567
+Ulasan : 1
+
+$
+Nama   : SatriyaJ
+NIK    : 2222222222222222
+Kredit : 2222222222222222
+Ulasan : 1
+
+$
+Nama   : RamadhaniPasha
+NIK    : 1234567891234567
+Kredit : 1234567891234567
+Ulasan : 1
+
