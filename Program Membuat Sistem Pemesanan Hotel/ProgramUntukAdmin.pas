@@ -2449,7 +2449,217 @@ if valid then // (rekursif) jika valid..
 Penutup:
 end; // end prosedur
 
- // hapus kalimat ini dan masukkan prosedur cetakstruk (4)
+procedure CetakStruk; // mencetak struk
+var 
+  simbol,nama,nik,kredit,pemanduStr: string;
+  ulang: char;
+  a,b,pilihan,pilihan2,pilihan3,pemanduA,posisiSalah: integer;
+  BacaBaris: array [1..9] of string;
+  valid, ketemuData2: boolean;
+  fileDataAtauRiwayat: text;
+label UlangInputPilihan, UlangInputPilihan2, UlangInputPilihan3,
+      UlangInputNama, UlangInputNama2, UlangInputNik, UlangInputKredit, Penutup;
+begin
+pemanduA:=0; valid:=true; ketemuData2:= false; 
+nama:= ''; kredit:= ''; nik:= '';{inisialisasi}
+clrscr;
+garis('=');
+writeln('CETAK STRUK / RIWAYAT PEMBELIAN');
+writeln;
+writeln('*Note : Pastikan pelanggan bukan penipu!');
+garis('-');
+
+UlangInputPilihan:
+write('Lihat keseluruhan data/Cetak struk (1/2) : ');readln(pemanduStr); // input pilihan pengguna
+val(pemanduStr,pilihan,posisiSalah); // coba konversi ke integer
+if posisiSalah > 0 then // jika terjadi kesalahan pada proses konversi..
+  begin
+  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan apakah pengguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. maka kembali menginput pilihan
+    goto UlangInputPilihan
+  else
+    goto Penutup; // selain itu.. menuju penutup
+  end;
+if not (pilihan in [1,2]) then // jika input tidak sesuai pilihan..
+  begin
+  cetakInvalid(1,1,0,ulang); // mencetak pesan invalid dan menanyakan apakah pengguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. maka kembali menginput pilihan
+    goto UlangInputPilihan
+  else
+    goto Penutup; // selain itu.. menuju penutup
+  end;
+
+UlangInputPilihan2:
+write('Riwayat pembelian lalu/Pemesanan mendatang (1/2) : ');readln(pemanduStr); // input pilihan ke-2 pengguna
+val(pemanduStr,pilihan2,posisiSalah); // mencoba mengkonversi ke integer 'Pilihan2'
+if posisiSalah > 0 then // jika terjadi kesalahan pada proses konversi..
+  begin
+  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan apakah pengguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. maka kembali menginput pilihan kedua
+    goto UlangInputPilihan2
+  else
+    goto Penutup; // selain itu.. menuju penutup
+  end;
+if not (pilihan2 in [1,2]) then // jika input tidak sesuai pilihan..
+  begin
+  cetakInvalid(1,1,0,ulang); // mencetak pesan invalid dan menanyakan apakah pengguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. maka kembali menginput pilihan kedua
+    goto UlangInputPilihan2
+  else
+    goto Penutup; // selain itu.. dianggap tidak ingin dan menuju penutup
+  end;
+
+UlangInputPilihan3:
+write('Cari menggunakan Nama dan NIK/Nama dan Kredit (1/2) : ');readln(pemanduStr); // input pilihan ke-3 pengguna
+val(pemanduStr,pilihan3,posisiSalah); // mencoba mengkonversi ke integer 'Pilihan3'
+if posisiSalah > 0 then // jika terjadi kesalahan pada proses konversi..
+  begin
+  cetakInvalid(2,1,0,ulang); // mencetak pesan invalid dan menanyakan apakah pengguna ingin mengulangi
+  if ulang in ['y','Y'] then // jika ya.. maka kembali menginput pilihan ketiga
+    goto UlangInputPilihan3
+  else
+    goto Penutup; // selain itu.. menuju penutup
+  end;
+
+case pilihan3 of
+  1: // jika pilihan ketiga adalah input dengan nama dan NIK..
+    begin
+    UlangInputNama:
+    write('Masukkan nama (identifikasi) : ');readln(nama); // input nama pengguna
+    cekNama(nama,valid); // cek serta penyesuaian format nama
+    if not valid then // jika invalid..
+      begin
+      cetakInvalid(0,0,3,ulang); // menanyakan apakah pengguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput nama
+        goto UlangInputNama
+      else
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+    UlangInputNik:
+    write('Masukkan NIK (identifikasi) : ');readln(nik); // input NIK pengguna
+    cekInteger('NIK',nik,16,valid);  // cek NIK apakah bukan angka atau tidak 16 karakter
+    if not valid then // jika invalid..
+      begin
+      cetakInvalid(0,0,4,ulang); // menanyakan apakah pengguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput NIK
+        goto UlangInputNik
+      else if ulang in ['1'] then // jika pilihan adalah '1'.. kembali ke menginput nama
+        goto UlangInputNama
+      else
+        goto Penutup; // selain itu.. dianggap tidak ingin dan menuju penutup
+      end;
+    end;
+  2: // jika pilihan ketiga adalah input dengan nomor kredit..
+    begin
+    UlangInputNama2:
+    write('Masukkan nama (identifikasi) : ');readln(nama); // input nama pengguna
+    cekNama(nama,valid); // cek serta penyesuaian format nama
+    if not valid then // jika invalid..
+      begin
+      cetakInvalid(0,0,3,ulang); // menanyakan apakah pengguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput nama
+        goto UlangInputNama2
+      else
+        goto Penutup; // selain itu.. menuju penutup
+      end;
+    UlangInputKredit:
+    write('Masukkan nomor kredit (identifikasi) : ');readln(kredit); // input kredit pengguna
+    cekInteger('Nomor kredit',kredit,16,valid); // cek nomor kredit apakah bukan angka atau tidak 16 karakter
+    if valid then // (rekursif) jika valid..
+      cekKredit(kredit,valid); // cek nomor kredit jika adalah angka 0 enam belas digit
+    if not valid then // jika invalid..
+      begin
+      cetakInvalid(0,0,3,ulang); // menanyakan apakah pengguna ingin mengulangi
+      if ulang in ['y','Y'] then // jika ya.. kembali menginput nomor kredit
+        goto UlangInputKredit
+      else if ulang in ['1'] then // jika pilihan adalah '1'.. kembali ke menginput nama
+        goto UlangInputNama2
+      else
+        goto Penutup; // selain itu.. dianggap tidak ingin dan menuju penutup
+      end;
+    end;
+  otherwise// jika input tidak sesuai pilihan..
+    begin
+    cetakInvalid(1,1,0,ulang); // mencetak pesan invalid dan menanyakan apakah pengguna ingin mengulangi
+    if ulang in ['y','Y'] then // jika ya.. maka kembali menginput pilihan ketiga
+      goto UlangInputPilihan3
+    else
+      goto Penutup; // selain itu.. dianggap tidak ingin dan menuju penutup
+    end;
+  end;
+
+{mempersiapkan sistem}
+case pilihan2 of // assign file sesuai pilihan pertama pengguna
+  1: assign(fileDataAtauRiwayat,'RiwayatData.txt');
+  2: assign(fileDataAtauRiwayat,'Data.txt');
+  end;
+reset(fileDataAtauRiwayat); // membuka untuk membaca file
+while not eof(fileDataAtauRiwayat) do // selama file belum berakhir..
+  begin
+  readln(fileDataAtauRiwayat, simbol); // cari simbol
+  if pos('$',simbol) > 0 then // jika ditemukan..
+    begin
+    for a:=1 to 9 do // salin seluruh baris data
+      readln(fileDataAtauRiwayat,BacaBaris[a]);
+    if (pos(' '+nama+'|',BacaBaris[2]) > 0) AND (((pilihan3 = 1) and (pos(nik,BacaBaris[2]) > 0)) OR
+        ((pilihan3 = 2) and (pos(kredit,BacaBaris[3]) > 0))) then // jika nama dan nik atau kredit ditemukan
+        begin
+        case pilihan of // perintah sesuai pilihan kedua
+          1:
+            begin // cetak seluruh data
+            if pos('ON',simbol) > 0 then
+              begin // jika sedang berlangsung..
+              Textcolor(yellow);
+              writeln('( Sedang Berlansung )');
+              Textcolor(white);
+              end;
+            for b:=1 to 101 do // data error jika garis diambil dari file dan dicetak ke program..
+              write('='); // maka dibentuk manual
+            writeln;
+            for b:=2 to 9 do // cetak baris baris data ke layar
+              writeln(BacaBaris[b]);
+            pemanduA:= pemanduA + 1; // penghitung data
+            ketemuData2:= false; // pencegah readln
+            end;
+          2: // cetak struk
+            begin
+            for b:=1 to 101 do // bentuk garis
+              write('=');
+            writeln;
+            writeln('Hotel Aman Sentosa Kota Palangkaraya, Keminting, Jl. Kecubung');
+            for b:=1 to 101 do
+              write('=');
+            writeln;
+            write('| Nama Pembeli: ',nama);
+            gotoxy(101,wherey);writeln('|'); // cetak nama pengguna
+            for b:=4 to 9 do // cetak data
+              writeln(BacaBaris[b]);
+            pemanduA:= pemanduA + 1; // penghitung data
+            ketemuData2:= false; // pencegah readln
+            end;
+          end;
+        end;
+    if (pemanduA mod 2 > 0) then // jika data yang dicetak bukan kelipatan 2.. beri jarak
+      writeln // beri jarak
+    else if (not ketemuData2) AND (not(pemanduA = 0)) AND (pemanduA mod 2 = 0) then
+      begin // jika kelipatan 2.. tunggu ENTER
+      ketemuData2:= true; // mencegah readln lagi saat mencari data
+      readln; // menunggu perintah ENTER
+      end;
+    end;
+  end; //endwhile
+if (eof(fileDataAtauRiwayat)) AND (pemanduA = 0) then 
+    begin // jika file berakhir dan data tidak ditemukan..
+    Textcolor(red);
+    if pilihan3 = 1 then
+      writeln('Nama/NIK tidak sesuai atau data tidak ada!')
+    else
+      writeln('Nomor kredit tidak sesuai atau data tidak ada!');
+    Textcolor(white);
+    end;
+close(fileDataAtauRiwayat); // tutup file
+Penutup:
+end; // end prosedur
 
 procedure RiwayatPemesananSingkat; // mencetak riwayat pemesanan dari yang terbaru (dari data.txt)
 var
