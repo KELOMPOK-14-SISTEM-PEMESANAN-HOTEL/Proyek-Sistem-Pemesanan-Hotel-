@@ -840,9 +840,9 @@ if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
     val(hari1,hari1Int);val(bulan1,bulan1Int);val(tahun1,tahun1Int); 
     val(hari2,hari2Int);val(bulan2,bulan2Int);val(tahun2,tahun2Int); // konversi tanggal ke integer
     if informasi_d.kamar = 'Bi' then // jika jenis kamar adalah Biasa..
-      biaya:= (HitungHariRekur(hari2Int,bulan2Int - 1,tahun2Int - 1) - HitungHariRekur(hari1Int,bulan1Int - 1,tahun1Int - 1)) * 300 // maka harga adalah 300jt/hari
+      biaya:= (HitungHariRekur(hari2Int,bulan2Int - 1,tahun2Int - 1) - HitungHariRekur(hari1Int,bulan1Int - 1,tahun1Int - 1)) * 300 // (rekursif) maka harga adalah 300jt/hari
     else if informasi_d.kamar = 'De' then // jika jenis kamar adalah Deluxe..
-      biaya:= (HitungHariRekur(hari2Int,bulan2Int - 1,tahun2Int - 1) - HitungHariRekur(hari1Int,bulan1Int - 1,tahun1Int - 1)) * 500; // maka harga adalah 500jt/hari
+      biaya:= (HitungHariRekur(hari2Int,bulan2Int - 1,tahun2Int - 1) - HitungHariRekur(hari1Int,bulan1Int - 1,tahun1Int - 1)) * 500; // (rekursif) maka harga adalah 500jt/hari
     if biaya > 2000000000000000.0 then // jika harga terlalu banyak.. maka invalid
       begin
       write('Pesanan anda ');
@@ -862,7 +862,7 @@ if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
           end;
         end;
     biayaSPajak:= HitungPajak(biaya) + biaya; // menghitung biaya setelah pajak
-    konversiBiaya(biaya,biayaSPajak,informasi_d.Biaya,informasi_d.BiayaSpajak); // menkonversi kedua biaya agar mudah dibaca
+    konversiBiaya(biaya,biayaSPajak,informasi_d.Biaya,informasi_d.BiayaSpajak); // (rekursif) menkonversi kedua biaya agar mudah dibaca
     {----------------------}
 
     clrscr; // membersihkan layar
@@ -1391,7 +1391,7 @@ UlangInputTanggalSatu:
 write('Masukkan tanggal pertama (dd/mm/yyyy) : ');readln(awalTanggalIn); // input tanggal awal pengguna
   {cek tanggal awal: }
 konversiTanggal(awalTanggalIn,hari1,bulan1,tahun1,valid); // konversi serta cek tanggal bila 8 angka
-if valid then // (rekursif) jika valid..
+if valid then // jika valid..
   cekTanggal(hari1,bulan1,tahun1,valid); // cek tanggal awal secara mendetail
 if not valid then // jika invalid..
   begin 
