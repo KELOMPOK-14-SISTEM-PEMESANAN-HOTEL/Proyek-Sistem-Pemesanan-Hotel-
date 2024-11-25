@@ -93,16 +93,36 @@ for a:=1 to 40 do
 Penutup:
 end;
 
-function HitungHari(hari,bulan,tahun: string): double;// mengkonversi tanggal menjadi hari
-var
-  jumlahHariLint: TDateTime;
-  jumlahHariStr: string;
-begin
-HitungHari:= 0; {inisialisasi}
-jumlahHariLint:= StrToDate(hari +'/'+ bulan +'/'+ tahun,'dd/mm/yyyy','/'); // konversi tanggal menjadi jumlah hari
-str(jumlahHariLint,jumlahHariStr); // menyalin TDateTime ke str
-val(jumlahHariStr,HitungHari); // mengubah str menjadi real(double)
-end;
+function HitungHariRekur(hari,bulan,tahun: integer): double;// (rekursif) mengkonversi tanggal menjadi hari
+begin 
+if (hari = 0) AND (bulan = 0) AND (tahun = 0) then // jika telah selesai menghitung..
+  HitungHariRekur:= 0 // {base/dasar} hentikan rekursif
+else if bulan > 0 then // jika bulan belum sepenuhnya dikonversi.. konversi bulan
+  begin
+  case bulan of
+    1,3,5,7,8,10,12: // bulan dengan 31 hari..
+      HitungHariRekur:= 31 + HitungHariRekur(hari,bulan - 1,tahun);
+    4,6,9,11: // bulan dengan 30 hari..
+      HitungHariRekur:= 30 + HitungHariRekur(hari,bulan - 1,tahun);
+    2: // jika bulan februari..
+      begin
+      if tahun mod 4 > 0 then // jika bukan tahun kabisat..
+        HitungHariRekur:= 28 + HitungHariRekur(hari,bulan - 1,tahun) // hari = 28
+      else // jika tahun kabisat..
+        HitungHariRekur:= 29 + HitungHariRekur(hari,bulan - 1,tahun); // hari = 29
+      end;
+    end; // endcaseof
+  end
+else if tahun > 0 then // jika tahun belum sepenuhnya dikonversi.. konversi tahun
+  begin
+  if tahun mod 4 > 0 then // jika bukan tahun kabisat..
+    HitungHariRekur:= 365 + HitungHariRekur(hari,bulan,tahun - 1) // hari = 365
+  else // jika tahun kabisat..
+    HitungHariRekur:= 365 + HitungHariRekur(hari,bulan,tahun - 1); // hari = 366
+  end
+else if hari > 0 then // konversi hari
+  HitungHariRekur:= hari + HitungHariRekur(0,bulan,tahun);
+end; // ada cara yang lebih mudah dan simple, tapi rekursif digunakan untuk pelajaran
 
 procedure cekNama(var nama:string;var valid: boolean);// format awal:'saya benar', akhir:'SayaBenar'
 var 
@@ -336,22 +356,32 @@ if valid then //--jika valid..
   end;
 end;
 
+function rekursifBiaya(biaya: string; length,posisi: integer): string; // (rekursif) memasukkan titik ke biaya
+begin // awal nilai 'posisi' adalah 0 (cetak/cek karakter 'biaya' dan titik dari kanan ke kiri 'biaya')
+if posisi = length then // {base/dasar} jika posisi berada di karakter 0 (sudah mengambil karakter pertama kiri).. maka berhenti
+  rekursifBiaya:='' 
+else if (posisi in [3,6,9,12]) AND (not(posisi = length)) then
+  begin // jika posisi di karakter ke 4,7,10,11 dari paling kanan biaya.. beri titik
+  rekursifBiaya:= rekursifBiaya(biaya,length,posisi + 1) + biaya[length - posisi] + '.'; // karakter paling kanan (length - 0)
+  end
+else // selain itu.. tambah karakter pada biaya
+  begin
+  rekursifBiaya:= rekursifBiaya(biaya,length,posisi + 1) + biaya[length - posisi];
+  end;
+end; // jika tidak menggunakan rekursif, akan mudah.. tetapi tetap digunakan untuk tujuan pembelajaran
+
 {mengkonversi biaya hasil hitung menjadi string dan menambahkan titik pembatas angka agar mudah dibaca dan sesuai standar}
 procedure konversiBiaya(biaya,biayaSPajak: double;var biayaStr,biayaSPajakStr: string);
 begin
 str(biaya:0:0,biayaStr); //--mengkonversi biaya dan biaya setelah pajak menjadi str
 str(biayaSPajak:0:0,biayaSPajakStr); //--
-if length(biayaStr) > 3 then // jika panjang karakter biaya melebihi 3 karakter.. maka tambahkan titik
-  insert('.',biayaStr,(length(biayaStr) - 2));
-biayaStr:= biayaStr + '.000.000'; // tambahkan 6 angka nol, yaitu ratusan dan ribuan pada biaya
-if length(biayaStr) > 15 then // jika panjang biaya melebihi 15 karakter.. maka titik dihilangkan (agar muat pada data)
-  menghapus('.',biayaStr);
-if length(biayaSPajakStr) > 3 then // jika panjang karakter biaya Set pajak melebihi 3 karakter.. maka tambahkan titik
-  insert('.',biayaSPajakStr,(length(biayaSPajakStr) - 2));
-biayaSPajakStr:= biayaSPajakStr + '.000.000'; // tambahkan 6 angka nol, yaitu ratusan dan ribuan pada biaya Set pajak
-if length(biayaSPajakStr) > 15 then // jika panjang biaya melebihi 15 karakter.. maka titik dihilangkan (agar muat pada data)
-  menghapus('.',biayaSPajakStr);
-end;// format akhir = 100.300.000.000
+biayaStr:= biayaStr + '000000';
+if length(biayaStr) < 13 then // jika panjang biaya kurang dari 13 karakter.. (tidak diberi titik jika > 12, agar muat pada data)
+  biayaStr:= rekursifBiaya(biayaStr,length(biayaStr),0); // tambahkan titik pada biaya
+biayaSPajakStr:= biayaSPajakStr + '000000';
+if length(biayaSPajakStr) < 13 then // jika panjang biaya kurang dari 13 karakter..
+  biayaSPajakStr:= rekursifBiaya(biayaSPajakStr,length(biayaSPajakStr),0); // tambahkan 6 angka nol, yaitu ratusan dan ribuan pada biaya Set pajak
+end;// format akhir = 100.300.000.000 atau 1100300000000
 
 {membuka 'Sedia.txt' (kondisi kamar terisi/tidak) dan menghitung jumlah kamar kosong dan kamar berisi, Deluxe dan juga Biasa}
 procedure cekKetersediaan(var Sedia: text;var kosongBi,adaBi,kosongDe,adaDe: integer;
@@ -463,6 +493,7 @@ var
     kosongBi,adaBi,kosongDe,adaDe: integer;
     Data: text;
     hari1,hari2,bulan1,bulan2,tahun1,tahun2: string;
+    hari1Int,hari2Int,bulan1Int,bulan2Int,tahun1Int,tahun2Int: Integer;
 label
   UlangInputKamar, UlangInputJenisKamar,
   UlangInputNama, UlangInputUmur,
@@ -591,7 +622,7 @@ write('Masukkan nomor kredit anda: ');readln(informasi_p.nomor_kredit); // input
     {cek kredit: }
 cekInteger('Nomor Kredit',informasi_p.nomor_kredit,16,valid); // validasi kredit
 if valid then
-  cekKredit(informasi_p.nomor_kredit,valid); // (rekursif) jika valid, maka memeriksa jika kredit bernomor '0' 16 angka
+  cekKredit(informasi_p.nomor_kredit,valid); // jika valid, maka memeriksa jika kredit bernomor '0' 16 angka
 if not valid then //--jika invalid..
   begin 
     cetakInvalid(0,0,4,ulang); // menanyakan pelanggan jika ingin mengulang kembali
@@ -655,7 +686,7 @@ if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
         {cek dan konversi tanggal: }
     konversiTanggal(informasi_t[pemanduB].AwalPemesanan,hari1,bulan1,tahun1,valid); // mengonversi dan cek jumlah karakter tanggal
     if valid then
-      cekTanggal(hari1,bulan1,tahun1,valid); // (rekursif) jika valid.. maka prosedur 'cekTanggal' dipanggil
+      cekTanggal(hari1,bulan1,tahun1,valid); // jika valid.. maka prosedur 'cekTanggal' dipanggil
     if not valid then // jika invalid..
       begin 
       cetakInvalid(0,0,4,ulang); // menanyakan jika pembeli ingin mengulangi input
@@ -673,7 +704,7 @@ if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
         {cek dan konversi tanggal: }
     konversiTanggal(informasi_t[pemanduB].AkhirPemesanan,hari2,bulan2,tahun2,valid); // konversi sekaligus cek tanggal
     if valid then
-      cekTanggal(hari2,bulan2,tahun2,valid); // (rekursif) mengecek secara detail kevalidan tanggal, menggantikan IOresult
+      cekTanggal(hari2,bulan2,tahun2,valid); // mengecek secara detail kevalidan tanggal, menggantikan IOresult
     if not valid then // jika invalid..
       begin 
       cetakInvalid(0,0,4,ulang); // menanyakan pembeli jika ingin mengulang kembali
@@ -821,10 +852,12 @@ if valid then // jika valid.. (setiap input yang salah menyebabkan valid:=false)
     informasi_d.waktu:= FormatDateTime('hh:nn:ss', WaktuSekarang); // menyimpan waktu sekarang pada variabel
     informasi_d.tanggal:= FormatDateTime('dd/mm/yyyy', WaktuSekarang); // menyimpan tanggal sekarang pada variabel
       //Menghitung biaya
+    val(hari1,hari1Int);val(bulan1,bulan1Int);val(tahun1,tahun1Int);
+    val(hari2,hari2Int);val(bulan2,bulan2Int);val(tahun2,tahun2Int); // konversi tanggal ke integer
     if informasi_d.kamar = 'Bi' then // jika jenis kamar adalah Biasa..
-      biaya:= (HitungHari(hari2,bulan2,tahun2) - HitungHari(hari1,bulan1,tahun1)) * 300 // maka harga adalah 300jt/hari
+      biaya:= (HitungHariRekur(hari2Int,bulan2Int - 1,tahun2Int - 1) - HitungHariRekur(hari1Int,bulan1Int - 1,tahun1Int - 1)) * 300 // maka harga adalah 300jt/hari
     else if informasi_d.kamar = 'De' then // jika jenis kamar adalah Deluxe..
-      biaya:= (HitungHari(hari2,bulan2,tahun2) - HitungHari(hari1,bulan1,tahun1)) * 500; // maka harga adalah 500jt/hari
+      biaya:= (HitungHariRekur(hari2Int,bulan2Int - 1,tahun2Int - 1) - HitungHariRekur(hari1Int,bulan1Int - 1,tahun1Int - 1)) * 500; // maka harga adalah 500jt/hari
     if biaya > 2000000000000000.0 then // jika harga terlalu banyak.. maka invalid
       begin
       write('Pesanan anda ');
@@ -1103,7 +1136,7 @@ if posisiSalah > 0 then // jika pilihan bukan angka..
   end;
 if (not(pilihan in [1,2])) then // jika pilihan adalah tidak atau selain pilihan
   valid:= false; // maka invalid
-if valid then // (rekursif) jika valid.. maka langkah selanjutnya dilakukan
+if valid then // jika valid.. maka langkah selanjutnya dilakukan
   begin
   case pilihan of // prosedur sesuai pilihan
     1: // jika pilihan adalah memeriksa kamar pada hari tertentu..
@@ -1113,7 +1146,7 @@ if valid then // (rekursif) jika valid.. maka langkah selanjutnya dilakukan
       write('Masukkan tanggal pertama {Check-in jam 13:00} : ');readln(awalTanggalIn); // input tanggal awal
       {cek tanggal awal: }
       konversiTanggal(awalTanggalIn,hari1,bulan1,tahun1,valid); // konversi dan cek jumlah karakter tanggal
-      if valid then // (rekursif) jika valid..
+      if valid then // jika valid..
         cekTanggal(hari1,bulan1,tahun1,valid); // cek tanggal secara mendetail
       if not valid then // jika invalid..
         begin 
@@ -1128,9 +1161,9 @@ if valid then // (rekursif) jika valid.. maka langkah selanjutnya dilakukan
       write('Masukkan tanggal kedua {Check-out jam 12:00} : ');readln(akhirTanggalIn); // input tanggal akhir
         {cek tanggal akhir: }
       konversiTanggal(akhirTanggalIn,hari2,bulan2,tahun2,valid); // konversi dan cek jumlah karakter tanggal
-      if valid then // (rekursif) jika valid..
+      if valid then // jika valid..
         cekTanggal(hari2,bulan2,tahun2,valid); // cek tanggal secara mendetail
-      if valid then // (rekursif) jika valid..
+      if valid then // jika valid..
         cekTanggalAwalAkhir(hari1,bulan1,tahun1,hari2,bulan2,tahun2,valid, // cek tanggal awal serta tanggal akhir
             'Tidak perlu cek kamar di masa lalu!','Tanggal awal ke akhir tidak boleh mundur atau sama!',1); // 
       if not valid then // jika invalid..                                        // '1' artinya tanggal awal boleh ke masa lalu
@@ -1565,7 +1598,7 @@ else if pilihan = 2 then // jika pilihan check-in menggunakan kredit
   begin
   write('Masukkan kredit : ');readln(kredit); // input kredit idenfitikasi
   cekInteger('Kredit',kredit,16,valid); // validasi kredit
-  if valid then // (rekursif) jika valid..
+  if valid then // jika valid..
     cekKredit(kredit,valid); // validasi kredit lanjutan
   if not valid then // jika invalid...
     begin 
@@ -1697,7 +1730,7 @@ else if (pemanduDe > 1) OR (pemanduBi > 1) OR ((pemanduDe = 1) and (pemanduBi = 
     else
       goto Penutup; // selain itu.. menuju penutup
     end
-  else if (pilihan2 <= ketemuData) or (pilihan2 > 0) then // ika pilihan valid..
+  else if (pilihan2 <= ketemuData) or (pilihan2 > 0) then // jika pilihan valid..
     pencacahB:= pemanduBerbeda[pilihan2] * 9; // pencacahB menyimpan kordinat akhir baris berdasarkan nomor kamar
   end
 else if ((pemanduDe = 1) and (pemanduBi = 0)) OR ((pemanduDe = 0) and (pemanduBi = 1)) then // jika hanya ada satu  data..
@@ -2344,7 +2377,7 @@ if (eof(Data)) AND (ketemuData = 0) then
     goto Penutup // menuju penutup
     end;
 close(Data); // tutup file
-if valid then // (rekursif) jika valid..
+if valid then // jika valid..
   begin
   if ketemuData = 1 then // jika data yang ditemukan hanya 1..
     pencacahB:= pemanduBerbeda[1] * 10 // simpan kordinat
@@ -2565,7 +2598,7 @@ case pilihan3 of
     UlangInputKredit:
     write('Masukkan nomor kredit (identifikasi) : ');readln(kredit); // input kredit pengguna
     cekInteger('Nomor kredit',kredit,16,valid); // cek nomor kredit apakah bukan angka atau tidak 16 karakter
-    if valid then // (rekursif) jika valid..
+    if valid then // jika valid..
       cekKredit(kredit,valid); // cek nomor kredit jika adalah angka 0 enam belas digit
     if not valid then // jika invalid..
       begin
